@@ -1,4 +1,77 @@
-baseURL = 'https://example.org/'
-locale = 'en-us'
-title = 'My New Hugo Project'
-theme = 'PaperMod'
+baseURL = "https://quorix.io.vn/"
+title = "Quorix Viet Nam"
+theme = "PaperMod"
+languageCode = "vi"
+defaultContentLanguage = "vi"
+paginate = 10
+
+enableInlineShortcodes = true
+enableRobotsTXT = true
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+
+[minify]
+  disableXML = true
+  minifyOutput = true
+
+[params]
+  env = "production"
+  title = "Quorix Viet Nam"
+  description = "Portfolio và Blog chia sẻ kiến thức Hệ thống, Mạng & Bảo mật của Mạnh Cường."
+  author = "Mạnh Cường"
+  defaultTheme = "auto"
+  disableThemeToggle = false
+  ShowShareButtons = true
+  ShowReadingTime = true
+  displayFullLangName = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowWordCount = true
+  ShowToc = true
+
+  [params.profileMode]
+    enabled = true
+    title = "👋 Xin chào, tôi là Mạnh Cường"
+    subtitle = "Sinh viên năm 4 chuyên ngành Mạng Máy tính & Truyền thông Dữ liệu. Tập trung nghiên cứu kiến trúc mạng, Security và phát triển backend với Golang."
+    imageUrl = "https://github.com/vmcchooky.png" # Tự động lấy avatar từ GitHub của bạn
+    imageWidth = 150
+    imageHeight = 150
+    imageTitle = "Mạnh Cường"
+    
+    [[params.profileMode.buttons]]
+      name = "Blog Kiến Thức"
+      url = "/posts/"
+    [[params.profileMode.buttons]]
+      name = "Project: Safe Road"
+      url = "/tags/project/"
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/vmcchooky"
+  [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://linkedin.com/in/username-cua-ban" # Hãy thay bằng link thật
+
+[menu]
+  [[menu.main]]
+    identifier = "posts"
+    name = "Bài viết"
+    url = "/posts/"
+    weight = 10
+  [[menu.main]]
+    identifier = "categories"
+    name = "Chuyên mục"
+    url = "/categories/"
+    weight = 20
+  [[menu.main]]
+    identifier = "tags"
+    name = "Từ khóa"
+    url = "/tags/"
+    weight = 30
+  [[menu.main]]
+    identifier = "search"
+    name = "Tìm kiếm"
+    url = "/search/"
+    weight = 40
