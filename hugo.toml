@@ -75,3 +75,11 @@ buildExpired = false
     name = "Tìm kiếm"
     url = "/search/"
     weight = 40
+[markup]
+  [markup.highlight]
+    codeFences = true
+    guessSyntax = true
+    lineNos = true
+    lineNumbersInTable = true
+    noClasses = false
+    tabWidth = 4
