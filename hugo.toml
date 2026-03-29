@@ -15,10 +15,13 @@ buildExpired = false
   disableXML = true
   minifyOutput = true
 
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
 [params]
   env = "production"
   title = "Quorix Viet Nam"
-  description = "Portfolio và Blog chia sẻ kiến thức Hệ thống, Mạng & Bảo mật của Mạnh Cường."
+  description = "Portfolio và Blog chia sẻ kiến thức Hệ thống, Mạng và Bảo mật của Mạnh Cường."
   author = "Mạnh Cường"
   defaultTheme = "auto"
   disableThemeToggle = false
@@ -31,28 +34,25 @@ buildExpired = false
   ShowWordCount = true
   ShowToc = true
 
-  [params.profileMode]
-    enabled = true
-    title = "👋 Xin chào, tôi là Mạnh Cường"
-    subtitle = "Sinh viên năm 4 chuyên ngành Mạng Máy tính & Truyền thông Dữ liệu. Tập trung nghiên cứu kiến trúc mạng, Security và phát triển backend với Golang."
-    imageUrl = "https://github.com/vmcchooky.png" # Tự động lấy avatar từ GitHub của bạn
-    imageWidth = 150
-    imageHeight = 150
-    imageTitle = "Mạnh Cường"
-    
-    [[params.profileMode.buttons]]
-      name = "Blog Kiến Thức"
-      url = "/posts/"
-    [[params.profileMode.buttons]]
-      name = "Project: Safe Road"
-      url = "/tags/project/"
+  [params.label]
+    text = "Quorix Viet Nam"
+    icon = "images/brand/quorixAVT.jpg"
+    iconHeight = 28
+
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    includeScore = true
+    threshold = 0.35
+    minMatchCharLength = 2
+    keys = ["title", "permalink", "summary", "content"]
 
   [[params.socialIcons]]
     name = "github"
     url = "https://github.com/vmcchooky"
   [[params.socialIcons]]
-    name = "linkedin"
-    url = "https://linkedin.com/in/username-cua-ban" # Hãy thay bằng link thật
+    name = "facebook"
+    url = "https://facebook.com/quorixvietnam"
 
 [menu]
   [[menu.main]]
@@ -61,20 +61,26 @@ buildExpired = false
     url = "/posts/"
     weight = 10
   [[menu.main]]
+    identifier = "projects"
+    name = "Dự án"
+    url = "/projects/"
+    weight = 20
+  [[menu.main]]
     identifier = "categories"
     name = "Chuyên mục"
     url = "/categories/"
-    weight = 20
+    weight = 30
   [[menu.main]]
     identifier = "tags"
     name = "Từ khóa"
     url = "/tags/"
-    weight = 30
+    weight = 40
   [[menu.main]]
     identifier = "search"
     name = "Tìm kiếm"
     url = "/search/"
-    weight = 40
+    weight = 50
+
 [markup]
   [markup.highlight]
     codeFences = true

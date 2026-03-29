@@ -1,0 +1,96 @@
+{{ define "main" }}
+<section class="qx-home">
+  <div class="qx-bg-orb qx-bg-orb-red" aria-hidden="true"></div>
+  <div class="qx-bg-orb qx-bg-orb-blue" aria-hidden="true"></div>
+
+  <div class="qx-hero">
+    <div class="qx-hero-copy">
+      <p class="qx-kicker">QUORIX VIET NAM</p>
+      <h1>Kết nối tri thức mạng lưới, định tuyến tương lai số.</h1>
+      <p class="qx-lead">Blog và không gian kỹ thuật về Hệ thống, Mạng, Bảo mật và lập trình Golang. Tập trung tính thực chiến, tối giản trong trình bày và rõ ràng trong tư duy.</p>
+      <div class="qx-topic-row" aria-label="Chuyên môn Quorix">
+        <span>Network Architecture</span>
+        <span>Security Mindset</span>
+        <span>Golang Engineering</span>
+      </div>
+      <div class="qx-cta-row">
+        <a class="qx-btn qx-btn-primary" href="{{ "/posts/" | relLangURL }}">Đọc bài mới</a>
+        <a class="qx-btn qx-btn-ghost" href="{{ "/projects/" | relLangURL }}">Dự án của Quorix</a>
+      </div>
+      <div class="qx-social-wrap">{{ partial "social_icons.html" (dict "align" "left") }}</div>
+    </div>
+
+    <div class="qx-hero-art">
+      <img src="{{ "images/brand/quorixbackground.png" | relURL }}" alt="Quorix Viet Nam visual" loading="eager">
+    </div>
+  </div>
+
+  <section class="qx-section qx-about-grid qx-section-sticker">
+    <img class="qx-sticker qx-sticker-about" src="{{ "images/brand/mascot/gopher2.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
+    <article class="qx-card qx-about-card">
+      <header class="qx-section-head qx-section-head-tight">
+        <h2>Về Quorix Việt Nam</h2>
+      </header>
+      <p>Quorix Việt Nam là nền tảng chia sẻ kiến thức và dự án kỹ thuật dành cho cộng đồng yêu công nghệ. Phần giới thiệu chuyên sâu về định hướng, câu chuyện thương hiệu và mục tiêu dài hạn sẽ được cập nhật thêm trong thời gian tới.</p>
+      <p>Định hướng nội dung hiện tại tập trung trên ba trục chính: hạ tầng mạng, tư duy bảo mật và phát triển backend với Golang.</p>
+    </article>
+
+    <aside class="qx-card qx-contact-card">
+      <header class="qx-section-head qx-section-head-tight">
+        <h2>Liên hệ</h2>
+      </header>
+      <ul class="qx-contact-list">
+        <li><span>Email chung:</span> <a href="mailto:contact@quorix.io.vn">contact@quorix.io.vn</a></li>
+        <li><span>Founder:</span> <a href="mailto:chooky@quorix.io.vn">chooky@quorix.io.vn</a></li>
+        <li><span>FB Founder:</span> <a href="https://facebook.com/chooky.vmc" target="_blank" rel="noopener noreferrer">facebook.com/chooky.vmc</a></li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="qx-section qx-section-sticker">
+    <img class="qx-sticker qx-sticker-posts" src="{{ "images/brand/mascot/gopher.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
+    <header class="qx-section-head">
+      <h2>Bài viết gần đây</h2>
+      <a href="{{ "/posts/" | relLangURL }}">Xem tất cả</a>
+    </header>
+    <div class="qx-grid">
+      {{ $posts := where site.RegularPages "Section" "posts" }}
+      {{ range first 6 $posts }}
+      <article class="qx-card">
+        <p class="qx-card-meta">{{ .Date | time.Format ":date_long" }}</p>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Summary | plainify | truncate 120 }}</p>
+      </article>
+      {{ else }}
+      <article class="qx-card qx-card-empty">
+        <h3>Chưa có bài viết</h3>
+        <p>Hãy thêm bài mới trong thư mục content/posts để bắt đầu hành trình chia sẻ kiến thức.</p>
+      </article>
+      {{ end }}
+    </div>
+  </section>
+
+  <section class="qx-section qx-section-sticker">
+    <img class="qx-sticker qx-sticker-projects" src="{{ "images/brand/mascot/gopher3.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
+    <header class="qx-section-head">
+      <h2>Dự án nổi bật</h2>
+      <a href="{{ "/projects/" | relLangURL }}">Khám phá dự án</a>
+    </header>
+    <div class="qx-grid qx-grid-projects">
+      {{ $projects := where site.RegularPages "Section" "projects" }}
+      {{ range first 4 $projects }}
+      <article class="qx-card qx-card-project">
+        <p class="qx-chip">Dự án</p>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Summary | plainify | truncate 140 }}</p>
+      </article>
+      {{ else }}
+      <article class="qx-card qx-card-empty">
+        <h3>Không có dữ liệu dự án</h3>
+        <p>Bạn có thể tạo mới tại content/projects để hiển thị tại khu vực này.</p>
+      </article>
+      {{ end }}
+    </div>
+  </section>
+</section>
+{{ end }}

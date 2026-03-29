@@ -1,0 +1,24 @@
+{{ define "main" }}
+<section class="qx-project-shell">
+  <header class="qx-project-head">
+    <p class="qx-kicker">PROJECT HUB</p>
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p>{{ . }}</p>{{ end }}
+  </header>
+
+  <div class="qx-grid qx-grid-projects">
+    {{ range .Pages.ByDate.Reverse }}
+    <article class="qx-card qx-card-project">
+      <p class="qx-chip">{{ .Date | time.Format ":date_long" }}</p>
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      <p>{{ .Summary | plainify | truncate 150 }}</p>
+    </article>
+    {{ else }}
+    <article class="qx-card qx-card-empty">
+      <h2>Chưa có dự án</h2>
+      <p>Tạo thêm nội dung trong thư mục content/projects để hiển thị danh sách tại đây.</p>
+    </article>
+    {{ end }}
+  </div>
+</section>
+{{ end }}

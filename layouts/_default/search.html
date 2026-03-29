@@ -1,0 +1,14 @@
+{{ define "main" }}
+<section class="qx-search-shell">
+  <header class="qx-search-head">
+    <p class="qx-kicker">TRUY VẤN TRI THỨC</p>
+    <h1>{{ .Title }}</h1>
+    <p>{{ .Description | default "Tìm nhanh bài viết và dự án bằng từ khóa gần đúng." }}</p>
+  </header>
+
+  <div id="searchbox" class="qx-searchbox">
+    <input id="searchInput" autofocus placeholder="{{ .Params.placeholder | default "Nhập từ khóa để tìm kiếm..." }}" aria-label="search" type="search" autocomplete="off" maxlength="64">
+    <ul id="searchResults" aria-label="search results"></ul>
+  </div>
+</section>
+{{ end }}

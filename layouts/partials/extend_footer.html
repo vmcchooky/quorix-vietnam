@@ -1,0 +1,83 @@
+<script>
+(() => {
+  const body = document.body;
+  const nav = document.querySelector('.header');
+  if (!nav || !body) return;
+
+  const idleDelay = 2800;
+  let idleTimer;
+  let revealTimer;
+  let lastRevealAt = 0;
+  let lastScrollY = window.scrollY || 0;
+  let accumulatedScroll = 0;
+
+  const showNav = () => {
+    const wasIdle = body.classList.contains('is-nav-idle');
+    body.classList.remove('is-nav-idle');
+
+    if (wasIdle) {
+      body.classList.remove('is-nav-returning');
+      void nav.offsetWidth;
+      body.classList.add('is-nav-returning');
+      clearTimeout(revealTimer);
+      revealTimer = setTimeout(() => body.classList.remove('is-nav-returning'), 440);
+    }
+
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      body.classList.remove('is-nav-returning');
+      body.classList.add('is-nav-idle');
+    }, idleDelay);
+  };
+
+  const isMobileViewport = () => window.matchMedia('(max-width: 820px)').matches;
+
+  const showNavGuarded = () => {
+    const now = Date.now();
+    const cooldown = isMobileViewport() ? 460 : 180;
+    if (now - lastRevealAt < cooldown) return;
+    lastRevealAt = now;
+    showNav();
+  };
+
+  const handleScrollActivity = () => {
+    const nowY = window.scrollY || 0;
+    const delta = Math.abs(nowY - lastScrollY);
+    lastScrollY = nowY;
+
+    const threshold = isMobileViewport() ? 30 : 9;
+    accumulatedScroll += delta;
+
+    if (accumulatedScroll < threshold) return;
+    accumulatedScroll = 0;
+    showNavGuarded();
+  };
+
+  const directEvents = ['touchstart', 'pointerdown', 'keydown'];
+  directEvents.forEach((eventName) => {
+    if (eventName === 'keydown') {
+      window.addEventListener(eventName, showNavGuarded);
+    } else {
+      window.addEventListener(eventName, showNavGuarded, { passive: true });
+    }
+  });
+
+  const scrollEvents = ['wheel', 'scroll'];
+  scrollEvents.forEach((eventName) => {
+    window.addEventListener(eventName, handleScrollActivity, { passive: true });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      showNav();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    accumulatedScroll = 0;
+    lastScrollY = window.scrollY || 0;
+  }, { passive: true });
+
+  showNav();
+})();
+</script>
