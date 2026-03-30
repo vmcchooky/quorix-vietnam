@@ -1,0 +1,316 @@
+{{ define "main" }}
+{{- $apiURL := "/api/ai-search" | relURL -}}
+{{- $postsURL := "/posts/" | relURL -}}
+<section class="qx-ai-search" data-api-url="{{ $apiURL }}" data-posts-url="{{ $postsURL }}">
+  <div class="qx-legacy-search-compat" hidden aria-hidden="true">
+    <div id="searchbox">
+      <input id="searchInput" type="search" autocomplete="off" tabindex="-1" />
+      <ul id="searchResults"></ul>
+    </div>
+  </div>
+
+  <div class="qx-ai-orb qx-ai-orb-red" aria-hidden="true"></div>
+  <div class="qx-ai-orb qx-ai-orb-blue" aria-hidden="true"></div>
+
+  <header class="qx-ai-search-head">
+    <p class="qx-ai-search-kicker">AI SEARCH</p>
+    <h1>{{ .Title }}</h1>
+    <p class="qx-ai-search-lead">{{ .Description | default "Tìm theo ý định, có tóm tắt AI, trích dẫn nguồn và gợi ý hỏi tiếp theo." }}</p>
+  </header>
+
+  <form class="qx-ai-search-bar" id="qx-ai-search-form" autocomplete="off">
+    <label class="qx-ai-search-label" for="qx-ai-search-input">Câu hỏi</label>
+    <div class="qx-ai-search-inputrow">
+      <input id="qx-ai-search-input" class="qx-ai-search-input" type="search" maxlength="180" placeholder="{{ .Params.placeholder | default "Ví dụ: Tìm bài về internal/package trong Go" }}" aria-label="Hỏi Quorix" />
+      <button class="qx-ai-search-submit" type="submit">Tìm ngay</button>
+    </div>
+    <p class="qx-ai-search-hint">Mẹo: hỏi như đang nói chuyện. Ví dụ: "Tóm tắt bài về OSPF và cho tôi bài liên quan".</p>
+  </form>
+
+  <div class="qx-ai-chiprow" aria-label="Gợi ý nhanh">
+    <button class="qx-ai-chip js-ai-query" type="button" data-query="Tìm các bài viết về Go internal package và architecture backend.">Go backend</button>
+    <button class="qx-ai-chip js-ai-query" type="button" data-query="Tóm tắt nhanh các bài về bảo mật và mạng.">Security</button>
+    <button class="qx-ai-chip js-ai-query" type="button" data-query="Bài nào nói về tổ chức thư mục hoặc cấu trúc dự án Go?">Go structure</button>
+    <button class="qx-ai-chip js-ai-query" type="button" data-query="Cho tôi bài gần đây nhất có liên quan đến networking.">Networking mới</button>
+  </div>
+
+  <div class="qx-ai-grid">
+    <section class="qx-ai-panel qx-ai-answer-panel" aria-live="polite">
+      <div class="qx-ai-panel-head">
+        <div>
+          <p class="qx-ai-panel-kicker">Kết quả AI</p>
+          <h2>Tóm tắt và trích dẫn</h2>
+        </div>
+        <span class="qx-ai-status" id="qx-ai-status">Sẵn sàng</span>
+      </div>
+
+      <div class="qx-ai-notice" id="qx-ai-notice" hidden></div>
+
+      <div class="qx-ai-empty" id="qx-ai-empty">
+        <h3>Hãy hỏi Quorix một điều gì đó</h3>
+        <p>Trang này sẽ trả lời ngắn gọn, chỉ ra nguồn liên quan và gợi ý câu hỏi tiếp theo.</p>
+      </div>
+
+      <div class="qx-ai-answer" id="qx-ai-answer" hidden>
+        <p class="qx-ai-answer-copy" id="qx-ai-answer-copy"></p>
+        <div class="qx-ai-meta">
+          <span id="qx-ai-confidence"></span>
+          <span id="qx-ai-matches"></span>
+        </div>
+      </div>
+
+      <div class="qx-ai-sources" id="qx-ai-sources" hidden></div>
+      <div class="qx-ai-followups" id="qx-ai-followups" hidden></div>
+    </section>
+
+    <aside class="qx-ai-panel qx-ai-side-panel">
+      <div class="qx-ai-panel-head">
+        <div>
+          <p class="qx-ai-panel-kicker">Tối ưu</p>
+          <h2>Điều hướng nhanh</h2>
+        </div>
+      </div>
+
+      <div class="qx-ai-side-group">
+        <h3>Recent queries</h3>
+        <div class="qx-ai-recent" id="qx-ai-recent"></div>
+      </div>
+
+      <div class="qx-ai-side-group">
+        <h3>Nếu muốn browse</h3>
+        <a class="qx-ai-link" href="{{ $postsURL }}">Mở trang Posts</a>
+      </div>
+
+      <div class="qx-ai-side-group">
+        <h3>Cách hỏi tốt</h3>
+        <ul class="qx-ai-tips">
+          <li>Hỏi rõ chủ đề, mục tiêu hoặc bối cảnh.</li>
+          <li>Đòi tóm tắt, ví dụ hoặc so sánh nếu cần.</li>
+          <li>AI sẽ chỉ dùng bài viết và dự án trong site.</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script>
+(() => {
+  const root = document.querySelector('.qx-ai-search');
+  if (!root) return;
+
+  const apiUrl = root.dataset.apiUrl;
+  const postsUrl = root.dataset.postsUrl;
+  const form = document.getElementById('qx-ai-search-form');
+  const input = document.getElementById('qx-ai-search-input');
+  const status = document.getElementById('qx-ai-status');
+  const notice = document.getElementById('qx-ai-notice');
+  const emptyState = document.getElementById('qx-ai-empty');
+  const answerWrap = document.getElementById('qx-ai-answer');
+  const answerCopy = document.getElementById('qx-ai-answer-copy');
+  const confidence = document.getElementById('qx-ai-confidence');
+  const matches = document.getElementById('qx-ai-matches');
+  const sources = document.getElementById('qx-ai-sources');
+  const followups = document.getElementById('qx-ai-followups');
+  const recentWrap = document.getElementById('qx-ai-recent');
+  const queryButtons = Array.from(document.querySelectorAll('.js-ai-query'));
+  const recentKey = 'qx:ai-search-history:v1';
+
+  const loadRecent = () => {
+    try {
+      const raw = window.localStorage.getItem(recentKey);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((item) => typeof item === 'string').slice(0, 5) : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const saveRecent = (query) => {
+    try {
+      const current = loadRecent().filter((item) => item !== query);
+      current.unshift(query);
+      window.localStorage.setItem(recentKey, JSON.stringify(current.slice(0, 5)));
+      renderRecent();
+    } catch (error) {
+      // Ignore storage failures.
+    }
+  };
+
+  const renderRecent = () => {
+    if (!recentWrap) return;
+    const recent = loadRecent();
+    recentWrap.innerHTML = '';
+
+    if (recent.length === 0) {
+      recentWrap.innerHTML = '<p class="qx-ai-muted">Chưa có lịch sử.</p>';
+      return;
+    }
+
+    recent.forEach((item) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'qx-ai-recent-chip';
+      button.textContent = item;
+      button.addEventListener('click', () => {
+        input.value = item;
+        input.focus();
+        void submitQuery(item);
+      });
+      recentWrap.appendChild(button);
+    });
+  };
+
+  const setLoading = (isLoading, label = 'Đang tìm...') => {
+    if (!status) return;
+    status.textContent = isLoading ? label : 'Sẵn sàng';
+    root.classList.toggle('is-loading', isLoading);
+  };
+
+  const renderNotice = (payload) => {
+    if (!notice) return;
+    if (!payload || !payload.message) {
+      notice.hidden = true;
+      notice.textContent = '';
+      notice.className = 'qx-ai-notice';
+      return;
+    }
+
+    notice.hidden = false;
+    notice.className = `qx-ai-notice qx-ai-notice-${String(payload.type || 'info')}`;
+    notice.textContent = '';
+    const title = document.createElement('strong');
+    title.textContent = payload.title || 'Thông báo';
+    const body = document.createElement('span');
+    body.textContent = payload.message;
+    notice.appendChild(title);
+    notice.appendChild(body);
+  };
+
+  const renderSources = (items) => {
+    if (!sources) return;
+    sources.innerHTML = '';
+    if (!items || items.length === 0) {
+      sources.hidden = true;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    items.forEach((item, index) => {
+      const card = document.createElement('article');
+      card.className = 'qx-ai-source-card';
+      card.innerHTML = `
+        <p class="qx-ai-source-kicker">Nguồn ${index + 1}</p>
+        <h3><a href="${item.url}" target="_self" rel="noopener">${item.title}</a></h3>
+        <p>${item.reason || ''}</p>
+        <p class="qx-ai-source-excerpt">${item.excerpt || ''}</p>
+      `;
+      fragment.appendChild(card);
+    });
+    sources.appendChild(fragment);
+    sources.hidden = false;
+  };
+
+  const renderFollowups = (items) => {
+    if (!followups) return;
+    followups.innerHTML = '';
+    if (!items || items.length === 0) {
+      followups.hidden = true;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    items.forEach((item) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'qx-ai-followup-chip';
+      button.textContent = item;
+      button.addEventListener('click', () => {
+        input.value = item;
+        input.focus();
+        void submitQuery(item);
+      });
+      fragment.appendChild(button);
+    });
+    followups.appendChild(fragment);
+    followups.hidden = false;
+  };
+
+  const renderAnswer = (payload, query) => {
+    if (emptyState) emptyState.hidden = true;
+    if (answerWrap) answerWrap.hidden = false;
+    renderNotice(payload.notice || null);
+
+    if (answerCopy) answerCopy.textContent = payload.answer || 'Mình chưa đủ dữ liệu để trả lời chắc chắn.';
+    if (confidence) confidence.textContent = `Độ chắc: ${String(payload.confidence || 'medium').toUpperCase()}`;
+    if (matches) matches.textContent = payload.matchedCount ? `${payload.matchedCount} nguồn liên quan` : 'Không có nguồn đủ chắc';
+
+    const items = Array.isArray(payload.citations) ? payload.citations : [];
+    renderSources(items);
+    renderFollowups(Array.isArray(payload.followUps) ? payload.followUps : []);
+
+    saveRecent(query);
+  };
+
+  const submitQuery = async (query) => {
+    const cleaned = String(query || '').trim();
+    if (!cleaned) return;
+
+    setLoading(true);
+    if (emptyState) emptyState.hidden = true;
+    if (answerWrap) answerWrap.hidden = true;
+    if (sources) sources.hidden = true;
+    if (followups) followups.hidden = true;
+    renderNotice(null);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: cleaned, topK: 5 }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error((data && data.error) || 'AI Search đang tạm lỗi.');
+      }
+
+      renderAnswer(data || {}, cleaned);
+      setLoading(false, data && data.confidence ? `Đã xong · ${String(data.confidence).toUpperCase()}` : 'Đã xong');
+    } catch (error) {
+      setLoading(false, 'Lỗi tạm thời');
+      renderNotice({
+        type: 'error',
+        title: 'AI Search chưa sẵn sàng',
+        message: error.message || 'Không thể kết nối tới AI Search.',
+      });
+      if (emptyState) {
+        emptyState.hidden = false;
+        emptyState.innerHTML = `
+          <h3>AI Search chưa sẵn sàng</h3>
+          <p>${error.message || 'Không thể kết nối tới AI Search.'}</p>
+          <p><a class="qx-ai-link" href="${postsUrl}">Quay lại Posts</a></p>
+        `;
+      }
+    }
+  };
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const query = input.value.trim();
+    if (!query) return;
+    void submitQuery(query);
+  });
+
+  queryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const query = button.dataset.query || button.textContent || '';
+      input.value = query;
+      input.focus();
+      void submitQuery(query);
+    });
+  });
+
+  renderRecent();
+})();
+</script>
+{{ end }}

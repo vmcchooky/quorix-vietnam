@@ -3,6 +3,9 @@ title = "Cấu hình OSPF Single-Area cơ bản trên Router Cisco"
 date = 2026-03-29T08:00:00+07:00
 draft = false
 comments = true
+popularity = 76
+editorPick = false
+tldr = ["Cấu hình OSPF process ID 1 cho mô hình 3 router trong Area 0.", "Quảng bá đúng network/wildcard để các router học route OSPF tự động.", "Xác minh bằng show ip ospf neighbor, show ip route ospf và kiểm tra ping liên vùng."]
 categories = ["Networking", "Lab Note"]
 tags = ["CCNA", "Routing", "OSPF"]
 +++

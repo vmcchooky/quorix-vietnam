@@ -3,6 +3,9 @@ title = "Hello World"
 date = 2026-03-28T17:30:00+07:00
 draft = false
 comments = true
+popularity = 12
+editorPick = false
+tldr = ["Ví dụ khởi tạo AES cipher trong Go với gói crypto/aes.", "Key phải đúng độ dài chuẩn (16/24/32 bytes) để tránh lỗi invalid key size.", "Đây là bước nền trước khi xây Encrypt/Decrypt hoàn chỉnh cho project."]
 +++
 
 Dưới đây là cấu trúc khởi tạo một luồng mã hóa bảo mật cơ bản:

@@ -1,0 +1,637 @@
+﻿{{- define "main" -}}
+{{- $allPosts := (where site.RegularPages "Section" "posts").ByDate.Reverse -}}
+{{- $paginator := .Paginate $allPosts 6 -}}
+{{- $featured := first 3 $allPosts -}}
+{{- $tags := slice -}}
+{{- $authors := slice -}}
+{{- range $allPosts -}}
+  {{- range (.Params.tags | default (slice)) -}}
+    {{- $tags = $tags | append (printf "%v" .) -}}
+  {{- end -}}
+  {{- $authorName := printf "%v" (or .Params.author site.Params.author "Quorix Team") -}}
+  {{- $authors = $authors | append $authorName -}}
+{{- end -}}
+{{- $tags = first 8 (uniq (sort $tags)) -}}
+{{- $authors = first 5 (uniq (sort $authors)) -}}
+
+{{- $requestedLayout := lower (printf "%v" (or site.Params.postsLayout "editorial")) -}}
+{{- $layout := "editorial" -}}
+{{- if in (slice "editorial" "archive" "mobile") $requestedLayout -}}
+  {{- $layout = $requestedLayout -}}
+{{- end -}}
+
+<section class="qx-posts" data-posts-layout="{{ $layout }}" aria-label="Posts page">
+  <div class="qx-wireframe-bg" aria-hidden="true"></div>
+
+  <header class="qx-posts-head">
+    {{- partial "breadcrumbs.html" . -}}
+    <p class="qx-wireframe-kicker">QUORIX POSTS</p>
+    <h1>{{ .Title | default "Bài viết" }}</h1>
+    {{- if eq $layout "editorial" -}}
+    <p class="qx-wireframe-lead">Tổng hợp bài viết theo phong cách editorial: nổi bật nội dung quan trọng, quét nhanh metadata và đọc tiếp liền mạch.</p>
+    {{- else if eq $layout "archive" -}}
+    <p class="qx-wireframe-lead">Kho bài viết dạng archive với bộ lọc mạnh và timeline giúp tra cứu nhanh theo chủ đề và thời gian.</p>
+    {{- else -}}
+    <p class="qx-wireframe-lead">Mobile-first feed tối ưu thao tác một tay: sticky search, filter chip và nhịp đọc ngắn gọn.</p>
+    {{- end -}}
+  </header>
+
+  <section class="qx-posts-toolbar" aria-label="Điều khiển danh sách bài viết">
+    <div class="qx-toolbar-searchwrap">
+      <label class="qx-toolbar-search" for="qx-post-search">Tìm bài viết</label>
+      <input id="qx-post-search" type="search" placeholder="Tìm theo tiêu đề hoặc chủ đề..." autocomplete="off">
+      <div class="qx-search-suggestions" id="qx-search-suggestions" role="listbox" aria-label="Gợi ý tìm kiếm"></div>
+    </div>
+
+    <div class="qx-toolbar-row">
+      <div class="qx-chip-group" aria-label="Bộ lọc chủ đề">
+        {{- range $tags -}}
+        <button class="qx-chip js-filter-chip" type="button" data-filter="{{ . | lower }}">{{ . }}</button>
+        {{- else -}}
+        <button class="qx-chip js-filter-chip" type="button" data-filter="general">General</button>
+        {{- end -}}
+      </div>
+
+      <div class="qx-toolbar-actions">
+        <label class="qx-sort-wrap" for="qx-sort-posts">Sắp xếp</label>
+        <select id="qx-sort-posts" class="qx-sort">
+          <option value="newest">Mới nhất</option>
+          <option value="popular">Phổ biến (nếu có dữ liệu)</option>
+          <option value="editors">Biên tập đề xuất</option>
+        </select>
+        <button class="qx-clear-filter" type="button" id="qx-clear-filters">Xóa bộ lọc</button>
+      </div>
+    </div>
+
+    <p class="qx-toolbar-state" id="qx-toolbar-state" aria-live="polite">Chưa chọn bộ lọc nào. Danh sách đang hiển thị đầy đủ bài viết.</p>
+  </section>
+
+  {{- if gt (len $allPosts) 0 -}}
+
+  {{- if eq $layout "editorial" -}}
+  <section class="qx-wireframe is-active" id="layout-editorial" data-layout="editorial" aria-label="Editorial layout">
+    <div class="qx-editorial-hero">
+      {{- $heroMain := index $featured 0 -}}
+      {{- $mainTags := ($heroMain.Params.tags | default (slice "General")) -}}
+      {{- $heroPopularity := int (default 0 $heroMain.Params.popularity) -}}
+      {{- $heroEditor := 0 -}}
+      {{- if $heroMain.Params.editorPick -}}
+        {{- $heroEditor = 1 -}}
+      {{- end -}}
+      <article class="qx-feature-main js-post-item"
+        data-title="{{ $heroMain.Title | lower }}"
+        data-title-display="{{ $heroMain.Title }}"
+        data-url="{{ $heroMain.RelPermalink }}"
+        data-tags="{{ delimit (apply $mainTags "lower" ".") "," }}"
+        data-date="{{ $heroMain.Date.Unix }}"
+        data-popularity="{{ $heroPopularity }}"
+        data-editor="{{ $heroEditor }}">
+        <a class="qx-feature-media" href="{{ $heroMain.RelPermalink }}">
+          {{- with $heroMain.Params.cover.image -}}
+          <img src="{{ . | relURL }}" alt="{{ $heroMain.Title }}" loading="lazy">
+          {{- else -}}
+          <span aria-hidden="true">Featured Story</span>
+          {{- end -}}
+        </a>
+        <div class="qx-feature-content">
+          <p class="qx-label">Bài nổi bật</p>
+          <h2><a href="{{ $heroMain.RelPermalink }}">{{ $heroMain.Title }}</a></h2>
+          <p>{{ $heroMain.Summary | plainify | truncate 170 }}</p>
+          <div class="qx-meta-line">
+            <span>{{ $heroMain.Date | time.Format ":date_long" }}</span>
+            <span>{{ $heroMain.ReadingTime }} phút đọc</span>
+            <span>{{ index $mainTags 0 }}</span>
+          </div>
+        </div>
+      </article>
+
+      <div class="qx-feature-side">
+        {{- range after 1 $featured -}}
+        {{- $sideTags := (.Params.tags | default (slice "General")) -}}
+        {{- $sidePopularity := int (default 0 .Params.popularity) -}}
+        {{- $sideEditor := 0 -}}
+        {{- if .Params.editorPick -}}
+          {{- $sideEditor = 1 -}}
+        {{- end -}}
+        <article class="qx-feature-mini js-post-item"
+          data-title="{{ .Title | lower }}"
+          data-title-display="{{ .Title }}"
+          data-url="{{ .RelPermalink }}"
+          data-tags="{{ delimit (apply $sideTags "lower" ".") "," }}"
+          data-date="{{ .Date.Unix }}"
+          data-popularity="{{ $sidePopularity }}"
+          data-editor="{{ $sideEditor }}">
+          <p class="qx-label">Spotlight</p>
+          <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+          <p>{{ .Summary | plainify | truncate 90 }}</p>
+          <div class="qx-meta-line">
+            <span>{{ .Date | time.Format "02/01/2006" }}</span>
+            <span>{{ .ReadingTime }} phút</span>
+          </div>
+        </article>
+        {{- end -}}
+      </div>
+    </div>
+
+    <div class="qx-editorial-content">
+      <div class="qx-post-grid" data-sortable="true">
+        {{- range $paginator.Pages -}}
+        {{- $postTags := (.Params.tags | default (slice "General")) -}}
+        {{- $postTagsLower := (apply $postTags "lower" ".") -}}
+        {{- $postPopularity := int (default 0 .Params.popularity) -}}
+        {{- $editorPick := 0 -}}
+        {{- if .Params.editorPick -}}
+          {{- $editorPick = 1 -}}
+        {{- end -}}
+        <article class="qx-post-card js-post-item"
+          data-title="{{ .Title | lower }}"
+          data-title-display="{{ .Title }}"
+          data-url="{{ .RelPermalink }}"
+          data-tags="{{ delimit $postTagsLower "," }}"
+          data-date="{{ .Date.Unix }}"
+          data-popularity="{{ $postPopularity }}"
+          data-editor="{{ $editorPick }}">
+          {{- $postTitle := .Title -}}
+          <a class="qx-thumb" href="{{ .RelPermalink }}" aria-label="Mở bài {{ .Title }}">
+            {{- with .Params.cover.image -}}
+            <img src="{{ . | relURL }}" alt="{{ $postTitle }}" loading="lazy">
+            {{- else -}}
+            <span aria-hidden="true">{{ index $postTags 0 }}</span>
+            {{- end -}}
+          </a>
+          <div class="qx-card-meta">
+            <span>{{ .Date | time.Format "02 Jan 2006" }}</span>
+            <span>{{ .ReadingTime }} phút đọc</span>
+            <span>{{ index $postTags 0 }}</span>
+          </div>
+          <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+          <p>{{ .Summary | plainify | truncate 120 }}</p>
+          <div class="qx-card-actions">
+            <a class="qx-readmore" href="{{ .RelPermalink }}">Đọc tiếp</a>
+            <button class="qx-bookmark js-bookmark" type="button" data-bookmark-id="{{ .RelPermalink }}" aria-label="Lưu bài viết {{ .Title }}" aria-pressed="false">Lưu</button>
+          </div>
+        </article>
+        {{- end -}}
+      </div>
+
+      <aside class="qx-post-sidebar">
+        <section class="qx-side-block">
+          <h3>Tag phổ biến</h3>
+          <div class="qx-side-tags">
+            {{- range $tags -}}
+            <button class="qx-side-tag js-filter-chip" type="button" data-filter="{{ . | lower }}">{{ . }}</button>
+            {{- end -}}
+          </div>
+        </section>
+
+        <section class="qx-side-block">
+          <h3>Tác giả nổi bật</h3>
+          <ul class="qx-author-list">
+            {{- range $authors -}}
+            <li>
+              <strong>{{ . }}</strong>
+              <span>2 bài nổi bật</span>
+            </li>
+            {{- else -}}
+            <li>
+              <strong>Quorix Team</strong>
+              <span>Đang cập nhật</span>
+            </li>
+            {{- end -}}
+          </ul>
+        </section>
+
+        <section class="qx-side-block qx-newsletter">
+          <h3>Newsletter</h3>
+          <p>Nhận bài mới mỗi tuần qua email hoặc RSS.</p>
+          <div class="qx-newsletter-actions">
+            <a class="qx-newsletter-cta" href="mailto:contact@quorix.io.vn?subject=Dang%20ky%20newsletter%20Quorix">Đăng ký qua email</a>
+            <a class="qx-newsletter-cta qx-newsletter-cta-ghost" href="{{ "/index.xml" | relLangURL }}">Theo dõi RSS</a>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="qx-related-strip" aria-label="Bài liên quan">
+      <h3>Bài liên quan cùng chủ đề</h3>
+      <div class="qx-related-grid">
+        {{- range first 3 (after 1 $allPosts) -}}
+        <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+        {{- end -}}
+      </div>
+    </section>
+
+    <div class="qx-pagination-wireframe">
+      {{- if $paginator.HasNext -}}
+      <a class="qx-load-more" href="{{ $paginator.Next.URL }}">Load more</a>
+      {{- else -}}
+      <span class="qx-load-more is-disabled">Đã hiển thị toàn bộ bài viết</span>
+      {{- end -}}
+    </div>
+  </section>
+
+  {{- else if eq $layout "archive" -}}
+  <section class="qx-wireframe is-active" id="layout-archive" data-layout="archive" aria-label="Archive layout">
+    <div class="qx-archive-shell">
+      <aside class="qx-archive-rail">
+        <h2>Archive + Lọc mạnh</h2>
+        <p>Layout tập trung cho người dùng kỹ thuật muốn quét nhanh kho bài theo chủ đề, độ dài và mức độ chuyên sâu.</p>
+
+        <div class="qx-rail-block">
+          <h3>Chủ đề</h3>
+          <div class="qx-rail-chips">
+            {{- range $tags -}}
+            <button class="qx-chip js-filter-chip" type="button" data-filter="{{ . | lower }}">{{ . }}</button>
+            {{- end -}}
+          </div>
+        </div>
+
+        <div class="qx-rail-block">
+          <h3>Độ dài đọc</h3>
+          <ul>
+            <li><label><input type="checkbox"> Dưới 5 phút</label></li>
+            <li><label><input type="checkbox"> 5-10 phút</label></li>
+            <li><label><input type="checkbox"> Trên 10 phút</label></li>
+          </ul>
+        </div>
+      </aside>
+
+      <div class="qx-archive-main">
+        <header class="qx-archive-header">
+          <h2>Dòng thời gian bài viết</h2>
+          <p>Ưu tiên scan theo mốc thời gian và tính liên quan. Mỗi card giữ thumbnail tỷ lệ cố định và metadata rõ ràng.</p>
+        </header>
+
+        <div class="qx-timeline" data-sortable="true">
+          {{- range $allPosts -}}
+          {{- $itemTags := (.Params.tags | default (slice "General")) -}}
+          {{- $itemTagsLower := (apply $itemTags "lower" ".") -}}
+          {{- $itemPopularity := int (default 0 .Params.popularity) -}}
+          {{- $itemEditor := 0 -}}
+          {{- if .Params.editorPick -}}
+            {{- $itemEditor = 1 -}}
+          {{- end -}}
+          <article class="qx-timeline-item js-post-item"
+            data-title="{{ .Title | lower }}"
+            data-title-display="{{ .Title }}"
+            data-url="{{ .RelPermalink }}"
+            data-tags="{{ delimit $itemTagsLower "," }}"
+            data-date="{{ .Date.Unix }}"
+            data-popularity="{{ $itemPopularity }}"
+            data-editor="{{ $itemEditor }}">
+            <div class="qx-timeline-dot" aria-hidden="true"></div>
+            <div class="qx-timeline-card">
+              <p class="qx-card-meta">
+                <span>{{ .Date | time.Format "02 Jan 2006" }}</span>
+                <span>{{ .ReadingTime }} phút đọc</span>
+                <span>{{ index $itemTags 0 }}</span>
+              </p>
+              <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+              <p>{{ .Summary | plainify | truncate 110 }}</p>
+              <div class="qx-card-actions">
+                <a class="qx-readmore" href="{{ .RelPermalink }}">Đọc tiếp</a>
+                <button class="qx-bookmark js-bookmark" type="button" data-bookmark-id="{{ .RelPermalink }}" aria-label="Lưu bài viết {{ .Title }}" aria-pressed="false">Lưu</button>
+              </div>
+            </div>
+          </article>
+          {{- end -}}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{- else -}}
+  <section class="qx-wireframe is-active" id="layout-mobile" data-layout="mobile" aria-label="Mobile-first layout">
+    <div class="qx-mobile-intro">
+      <h2>Mobile-first Feed</h2>
+      <p>Tối ưu thao tác một tay với nhịp đọc nhanh, card ngắn gọn và bộ lọc bottom sheet.</p>
+    </div>
+
+    <div class="qx-phone-frame">
+      <div class="qx-phone-top">
+        <p class="qx-mobile-top-label">Chủ đề nổi bật</p>
+        <div class="qx-mobile-chip-row">
+          {{- range first 6 $tags -}}
+          <button type="button">{{ . }}</button>
+          {{- end -}}
+        </div>
+      </div>
+
+      <div class="qx-mobile-feed" data-sortable="true">
+        {{- range $allPosts -}}
+        {{- $mobileTags := (.Params.tags | default (slice "General")) -}}
+        {{- $mobileTagsLower := (apply $mobileTags "lower" ".") -}}
+        {{- $mobilePopularity := int (default 0 .Params.popularity) -}}
+        {{- $mobileEditor := 0 -}}
+        {{- if .Params.editorPick -}}
+          {{- $mobileEditor = 1 -}}
+        {{- end -}}
+        <article class="qx-mobile-card js-post-item"
+          data-title="{{ .Title | lower }}"
+          data-title-display="{{ .Title }}"
+          data-url="{{ .RelPermalink }}"
+          data-tags="{{ delimit $mobileTagsLower "," }}"
+          data-date="{{ .Date.Unix }}"
+          data-popularity="{{ $mobilePopularity }}"
+          data-editor="{{ $mobileEditor }}">
+          <p class="qx-card-meta">
+            <span>{{ index $mobileTags 0 }}</span>
+            <span>{{ .ReadingTime }} phút</span>
+          </p>
+          <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+          <p>{{ .Summary | plainify | truncate 95 }}</p>
+          <div class="qx-card-actions">
+            <a class="qx-readmore" href="{{ .RelPermalink }}">Đọc tiếp</a>
+            <button class="qx-bookmark js-bookmark" type="button" data-bookmark-id="{{ .RelPermalink }}" aria-label="Lưu bài viết {{ .Title }}" aria-pressed="false">Lưu</button>
+          </div>
+        </article>
+        {{- end -}}
+      </div>
+
+      <details class="qx-mobile-sheet">
+        <summary>Bộ lọc</summary>
+        <div class="qx-mobile-sheet-panel">
+          <h3>Lọc nhanh</h3>
+          <p>Chọn nhiều chủ đề và chạm “Áp dụng”.</p>
+          <div class="qx-sheet-chips">
+            {{- range $tags -}}
+            <button class="qx-chip js-filter-chip" type="button" data-filter="{{ . | lower }}">{{ . }}</button>
+            {{- end -}}
+          </div>
+          <div class="qx-sheet-actions">
+            <button class="qx-clear-filter" type="button" id="qx-mobile-clear">Xóa bộ lọc</button>
+            <button class="qx-apply" type="button" onclick="this.closest('details').removeAttribute('open')">Áp dụng</button>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+  {{- end -}}
+
+  <p class="qx-no-results" id="qx-empty-results" hidden>Không có bài viết phù hợp bộ lọc hiện tại. Hãy xóa bộ lọc hoặc đổi từ khóa tìm kiếm.</p>
+  {{- else -}}
+  <section class="qx-wireframe-empty">
+    <h2>Chưa có bài viết</h2>
+    <p>Hãy thêm ít nhất một bài trong <code>content/posts</code> để hiển thị trang danh sách.</p>
+  </section>
+  {{- end -}}
+</section>
+
+<script>
+(() => {
+  const scope = document.querySelector('.qx-posts');
+  if (!scope) return;
+
+  const filterButtons = Array.from(scope.querySelectorAll('.js-filter-chip'));
+  const clearButtons = Array.from(scope.querySelectorAll('#qx-clear-filters, #qx-mobile-clear'));
+  const searchInput = scope.querySelector('#qx-post-search');
+  const sortSelect = scope.querySelector('#qx-sort-posts');
+  const suggestions = scope.querySelector('#qx-search-suggestions');
+  const emptyState = scope.querySelector('#qx-empty-results');
+  const toolbarState = scope.querySelector('#qx-toolbar-state');
+  const bookmarkButtons = Array.from(scope.querySelectorAll('.js-bookmark'));
+  const bookmarkStorageKey = 'qx:saved-posts:v1';
+
+  const activeFilters = new Set();
+  const allItems = Array.from(scope.querySelectorAll('.js-post-item'));
+  const suggestionMap = new Map();
+  const savedBookmarks = (() => {
+    try {
+      const raw = window.localStorage.getItem(bookmarkStorageKey);
+      if (!raw) return new Set();
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return new Set();
+      return new Set(parsed.filter((value) => typeof value === 'string'));
+    } catch (error) {
+      return new Set();
+    }
+  })();
+
+  allItems.forEach((item) => {
+    const title = item.dataset.titleDisplay;
+    const url = item.dataset.url;
+    if (!title || !url || suggestionMap.has(title)) return;
+    suggestionMap.set(title, url);
+  });
+
+  const syncFilterButtons = () => {
+    filterButtons.forEach((chip) => {
+      const key = chip.dataset.filter;
+      chip.classList.toggle('is-active', Boolean(key) && activeFilters.has(key));
+    });
+  };
+
+  const syncToolbarState = () => {
+    if (!toolbarState) return;
+
+    const filterCount = activeFilters.size;
+    const searchTerm = searchInput ? searchInput.value.trim() : '';
+    const parts = [];
+
+    if (filterCount > 0) {
+      parts.push(`${filterCount} từ khóa lọc đang được bật`);
+    }
+
+    if (searchTerm) {
+      parts.push(`đang tìm "${searchTerm}"`);
+    }
+
+    if (parts.length === 0) {
+      toolbarState.textContent = 'Chưa chọn bộ lọc nào. Danh sách đang hiển thị đầy đủ bài viết.';
+      return;
+    }
+
+    toolbarState.textContent = `Đang ${parts.join(' • ')}.`;
+  };
+
+  const persistBookmarks = () => {
+    try {
+      window.localStorage.setItem(bookmarkStorageKey, JSON.stringify(Array.from(savedBookmarks)));
+    } catch (error) {
+      // Ignore storage errors (private mode, blocked storage).
+    }
+  };
+
+  const syncBookmarkButtons = () => {
+    bookmarkButtons.forEach((button) => {
+      const postId = button.dataset.bookmarkId;
+      const isSaved = Boolean(postId) && savedBookmarks.has(postId);
+      button.classList.toggle('is-saved', isSaved);
+      button.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
+      button.textContent = isSaved ? 'Đã lưu' : 'Lưu';
+    });
+  };
+
+  const updateSuggestions = () => {
+    if (!searchInput || !suggestions) return;
+
+    const query = searchInput.value.trim().toLowerCase();
+    suggestions.innerHTML = '';
+
+    if (!query) {
+      suggestions.classList.remove('is-visible');
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    let count = 0;
+
+    suggestionMap.forEach((url, title) => {
+      if (count >= 6) return;
+      if (!title.toLowerCase().includes(query)) return;
+
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'qx-suggestion-item';
+      row.textContent = title;
+      row.addEventListener('click', () => {
+        window.location.assign(url);
+      });
+
+      fragment.appendChild(row);
+      count += 1;
+    });
+
+    if (count > 0) {
+      suggestions.appendChild(fragment);
+      suggestions.classList.add('is-visible');
+    } else {
+      suggestions.classList.remove('is-visible');
+    }
+  };
+
+  const sortItems = (container, items) => {
+    const sortType = sortSelect ? sortSelect.value : 'newest';
+    const hasPopularityData = items.some((item) => Number(item.dataset.popularity || 0) > 0);
+    const hasEditorSignals = items.some((item) => Number(item.dataset.editor || 0) > 0);
+
+    const ranked = items.slice().sort((a, b) => {
+      const dateA = Number(a.dataset.date || 0);
+      const dateB = Number(b.dataset.date || 0);
+      const popA = Number(a.dataset.popularity || 0);
+      const popB = Number(b.dataset.popularity || 0);
+      const editA = Number(a.dataset.editor || 0);
+      const editB = Number(b.dataset.editor || 0);
+
+      if (sortType === 'popular') {
+        if (!hasPopularityData) return dateB - dateA;
+        return popB - popA || dateB - dateA;
+      }
+      if (sortType === 'editors') {
+        if (!hasEditorSignals) return dateB - dateA;
+        if (hasPopularityData) return editB - editA || popB - popA || dateB - dateA;
+        return editB - editA || dateB - dateA;
+      }
+      return dateB - dateA;
+    });
+
+    ranked.forEach((item) => container.appendChild(item));
+  };
+
+  const applyFiltersAndSort = () => {
+    const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    let visibleCount = 0;
+
+    allItems.forEach((item) => {
+      const title = item.dataset.title || '';
+      const tagText = item.dataset.tags || '';
+      const tags = tagText ? tagText.split(',') : [];
+
+      const matchSearch = !searchTerm || title.includes(searchTerm);
+      const matchTags = activeFilters.size === 0 || tags.some((tag) => activeFilters.has(tag));
+
+      const isVisible = matchSearch && matchTags;
+      item.hidden = !isVisible;
+      item.classList.toggle('is-filtered-out', !isVisible);
+      visibleCount += isVisible ? 1 : 0;
+    });
+
+    const sortables = Array.from(scope.querySelectorAll('[data-sortable="true"]'));
+    sortables.forEach((sortable) => {
+      const sortableItems = Array.from(sortable.querySelectorAll('.js-post-item'));
+      sortItems(sortable, sortableItems);
+    });
+
+    if (emptyState) {
+      emptyState.hidden = visibleCount > 0;
+      if (visibleCount === 0) {
+        const filterCount = activeFilters.size;
+        const searchValue = searchInput ? searchInput.value.trim() : '';
+        const searchNote = searchValue ? ` cho từ khóa "${searchValue}"` : '';
+        emptyState.textContent = filterCount > 0
+          ? `Không có bài viết phù hợp ${filterCount} bộ lọc${searchNote}. Hãy xóa bớt lọc hoặc đổi từ khóa tìm kiếm.`
+          : `Không có bài viết phù hợp${searchNote}. Hãy thử đổi từ khóa tìm kiếm.`;
+      } else {
+        emptyState.textContent = 'Không có bài viết phù hợp bộ lọc hiện tại. Hãy xóa bộ lọc hoặc đổi từ khóa tìm kiếm.';
+      }
+    }
+
+    syncToolbarState();
+  };
+
+  filterButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.filter;
+      if (!key) return;
+
+      if (activeFilters.has(key)) {
+        activeFilters.delete(key);
+      } else {
+        activeFilters.add(key);
+      }
+
+      syncFilterButtons();
+      applyFiltersAndSort();
+    });
+  });
+
+  clearButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      activeFilters.clear();
+      syncFilterButtons();
+      if (searchInput) searchInput.value = '';
+      updateSuggestions();
+      applyFiltersAndSort();
+    });
+  });
+
+  bookmarkButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const postId = button.dataset.bookmarkId;
+      if (!postId) return;
+
+      if (savedBookmarks.has(postId)) {
+        savedBookmarks.delete(postId);
+      } else {
+        savedBookmarks.add(postId);
+      }
+
+      persistBookmarks();
+      syncBookmarkButtons();
+    });
+  });
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      updateSuggestions();
+      applyFiltersAndSort();
+    });
+
+    searchInput.addEventListener('focus', updateSuggestions);
+
+    searchInput.addEventListener('blur', () => {
+      setTimeout(() => suggestions && suggestions.classList.remove('is-visible'), 120);
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', applyFiltersAndSort);
+  }
+
+  syncFilterButtons();
+  syncBookmarkButtons();
+  syncToolbarState();
+  applyFiltersAndSort();
+})();
+</script>
+{{- end -}}

@@ -33,6 +33,7 @@ buildExpired = false
   ShowCodeCopyButtons = true
   ShowWordCount = true
   ShowToc = true
+  postsLayout = "editorial" # options: editorial | archive | mobile
 
   [params.label]
     text = "Quorix Viet Nam"
@@ -77,7 +78,7 @@ buildExpired = false
     weight = 40
   [[menu.main]]
     identifier = "search"
-    name = "Tìm kiếm"
+    name = "Hỏi Quorix"
     url = "/search/"
     weight = 50
 

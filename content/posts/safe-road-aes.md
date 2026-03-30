@@ -3,6 +3,9 @@ title = "Khởi tạo luồng mã hóa AES-256 cho Project Safe Road"
 date = 2026-03-29T09:00:00+07:00
 draft = false
 comments = true
+popularity = 120
+editorPick = true
+tldr = ["AES-256-GCM cung cấp cả mã hóa và xác thực dữ liệu trong một luồng xử lý.", "Nonce phải luôn duy nhất với mỗi key và key AES-256 phải đủ 32 bytes.", "Nên đi kèm hàm Decrypt, key management và test round-trip Encrypt/Decrypt."]
 categories = ["Security", "Project"]
 tags = ["Golang", "Cryptography", "AES"]
 +++

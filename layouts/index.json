@@ -1,0 +1,25 @@
+{{- $items := slice -}}
+{{- $sections := slice "posts" "projects" -}}
+{{- range where site.RegularPages "Section" "in" $sections -}}
+  {{- if and (ne .Params.searchExclude true) (not .Draft) -}}
+    {{- $plainContent := .Content | plainify | replaceRE `\s+` " " | trim " " -}}
+    {{- $summary := .Summary | plainify | replaceRE `\s+` " " | trim " " -}}
+    {{- $tags := .Params.tags | default (slice) -}}
+    {{- $items = $items | append (dict
+      "id" (printf "%s" .RelPermalink)
+      "title" .Title
+      "section" .Section
+      "url" .RelPermalink
+      "permalink" .Permalink
+      "summary" (truncate 280 $summary)
+      "content" (truncate 2200 $plainContent)
+      "description" (.Description | default "")
+      "tags" $tags
+      "date" (.Date.Format "2006-01-02")
+      "readingTime" .ReadingTime
+      "wordCount" .WordCount
+      "type" "page"
+    ) -}}
+  {{- end -}}
+{{- end -}}
+{{- dict "generatedAt" (now.UTC.Format "2006-01-02T15:04:05Z07:00") "items" $items | jsonify -}}

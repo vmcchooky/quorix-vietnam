@@ -3,6 +3,9 @@ title = "Tổ chức thư mục internal/database trong Go"
 date = 2026-03-29T10:00:00+07:00
 draft = false
 comments = true
+popularity = 98
+editorPick = true
+tldr = ["Dùng internal/database để khóa phạm vi package nội bộ và giảm coupling.", "Tách rõ database, service, handler để kiến trúc backend Go dễ mở rộng.", "Trong production nên trả lỗi + cấu hình connection pool thay vì log.Fatalf trực tiếp."]
 categories = ["Backend", "Programming"]
 tags = ["Golang", "Architecture", "Database"]
 +++
