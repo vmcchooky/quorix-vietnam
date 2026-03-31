@@ -11,6 +11,10 @@
   gap: 0.9rem;
 }
 
+.qx-ai-search [hidden] {
+  display: none !important;
+}
+
 .qx-search-head {
   display: grid;
   gap: 0.35rem;
@@ -98,6 +102,22 @@
 .qx-browse-shell {
   display: grid;
   gap: 0.72rem;
+}
+
+.qx-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.qx-browse-shell {
+  transition: opacity 0.22s ease, transform 0.24s ease, filter 0.24s ease;
+}
+
+.qx-stage.is-chat .qx-browse-shell {
+  opacity: 0.34;
+  transform: scale(0.997);
+  filter: blur(1.25px) saturate(0.88);
+  pointer-events: none;
 }
 
 .qx-quick-chips {
@@ -288,6 +308,9 @@
 }
 
 .qx-chat-shell {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
   border: 1px solid var(--qx-card-border);
   border-radius: 20px;
   background: var(--qx-card-bg);
@@ -295,6 +318,15 @@
   padding: 0.85rem;
   display: grid;
   gap: 0.7rem;
+  opacity: 0;
+  transform: translateY(8px) scale(0.996);
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+
+.qx-chat-shell.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .qx-chat-top {
@@ -325,7 +357,7 @@
 .qx-chat-thread {
   display: grid;
   gap: 0.6rem;
-  max-height: min(64vh, 42rem);
+  max-height: min(64vh, 40rem);
   overflow: auto;
   padding-right: 0.1rem;
 }
@@ -516,6 +548,19 @@ html[data-theme="dark"] .qx-chat-msg.is-user .qx-chat-bubble {
   .qx-chat-source-card {
     border-radius: 12px;
   }
+
+  .qx-chat-shell {
+    border-radius: 16px;
+    padding: 0.7rem;
+    inset: 0;
+    transition: opacity 0.14s ease, transform 0.18s ease;
+  }
+
+  .qx-stage.is-chat .qx-browse-shell {
+    opacity: 0.22;
+    transform: none;
+    filter: none;
+  }
 }
 
 @keyframes qx-pivot-spin {
@@ -537,5 +582,26 @@ html[data-theme="dark"] .qx-chat-msg.is-user .qx-chat-bubble {
   40% {
     transform: translateY(-2px);
     opacity: 1;
+  }
+}
+
+@keyframes qx-chat-overlay-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.996);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qx-browse-shell,
+  .qx-chat-shell,
+  .qx-ai-pivot-mark::after,
+  .qx-chat-dots i {
+    transition: none !important;
+    animation: none !important;
   }
 }

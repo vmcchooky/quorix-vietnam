@@ -34,50 +34,52 @@
     </div>
   </form>
 
-  <div id="qx-browse-shell" class="qx-browse-shell">
-    <div class="qx-quick-chips" id="qx-quick-chips" aria-label="Từ khóa tìm nhanh">
-      <button class="qx-quick-chip" type="button" data-query="Go backend">Go backend</button>
-      <button class="qx-quick-chip" type="button" data-query="Security">Security</button>
-      <button class="qx-quick-chip" type="button" data-query="Go structure">Go structure</button>
-      <button class="qx-quick-chip" type="button" data-query="Networking mới">Networking mới</button>
-    </div>
-
-    <div id="qx-fast-wrap" class="qx-fast-wrap" hidden>
-      <div id="qx-fast-results" class="qx-fast-results"></div>
-    </div>
-
-    <button id="qx-ai-pivot" class="qx-ai-pivot is-loading" type="button" hidden disabled aria-label="Mở Quorix AI chat">
-      <span class="qx-ai-pivot-mark" aria-hidden="true">
-        <img src="/images/brand/quorixAVT.jpg" alt="" />
-      </span>
-      <span class="qx-ai-pivot-copy">
-        <strong id="qx-ai-pivot-title">Quorix đang suy luận</strong>
-        <span id="qx-ai-pivot-subtitle">Đang đọc nguồn và tạo phần giải thích theo ngữ cảnh...</span>
-      </span>
-    </button>
-
-    <article id="qx-ai-explainer" class="qx-ai-explainer" hidden>
-      <p id="qx-ai-explainer-text"></p>
-    </article>
-
-    <section id="qx-source-list" class="qx-source-list" hidden></section>
-  </div>
-
-  <section id="qx-chat-shell" class="qx-chat-shell" hidden>
-    <div class="qx-chat-top">
-      <button id="qx-chat-back" class="qx-chat-back" type="button" aria-label="Quay lại kết quả tìm kiếm">←</button>
-      <p id="qx-chat-context" class="qx-chat-context"></p>
-    </div>
-
-    <div id="qx-chat-thread" class="qx-chat-thread" aria-live="polite"></div>
-
-    <form id="qx-chat-form" class="qx-chat-form" autocomplete="off">
-      <div class="qx-chat-compose-row">
-        <textarea id="qx-chat-input" class="qx-chat-input" rows="2" maxlength="900" placeholder="Hỏi tiếp để đào sâu chủ đề..."></textarea>
-        <button class="qx-chat-send" type="submit">Gửi</button>
+  <div id="qx-stage" class="qx-stage">
+    <div id="qx-browse-shell" class="qx-browse-shell">
+      <div class="qx-quick-chips" id="qx-quick-chips" aria-label="Từ khóa tìm nhanh">
+        <button class="qx-quick-chip" type="button" data-query="Go backend">Go backend</button>
+        <button class="qx-quick-chip" type="button" data-query="Security">Security</button>
+        <button class="qx-quick-chip" type="button" data-query="Go structure">Go structure</button>
+        <button class="qx-quick-chip" type="button" data-query="Networking mới">Networking mới</button>
       </div>
-    </form>
-  </section>
+
+      <div id="qx-fast-wrap" class="qx-fast-wrap" hidden>
+        <div id="qx-fast-results" class="qx-fast-results"></div>
+      </div>
+
+      <button id="qx-ai-pivot" class="qx-ai-pivot is-loading" type="button" hidden disabled aria-label="Mở Quorix AI chat">
+        <span class="qx-ai-pivot-mark" aria-hidden="true">
+          <img src="/images/brand/quorixAVT.jpg" alt="" />
+        </span>
+        <span class="qx-ai-pivot-copy">
+          <strong id="qx-ai-pivot-title">Quorix đang suy luận</strong>
+          <span id="qx-ai-pivot-subtitle">Đang đọc nguồn và tạo phần giải thích theo ngữ cảnh...</span>
+        </span>
+      </button>
+
+      <article id="qx-ai-explainer" class="qx-ai-explainer" hidden>
+        <p id="qx-ai-explainer-text"></p>
+      </article>
+
+      <section id="qx-source-list" class="qx-source-list" hidden></section>
+    </div>
+
+    <section id="qx-chat-shell" class="qx-chat-shell" hidden>
+      <div class="qx-chat-top">
+        <button id="qx-chat-back" class="qx-chat-back" type="button" aria-label="Quay lại kết quả tìm kiếm">←</button>
+        <p id="qx-chat-context" class="qx-chat-context"></p>
+      </div>
+
+      <div id="qx-chat-thread" class="qx-chat-thread" aria-live="polite"></div>
+
+      <form id="qx-chat-form" class="qx-chat-form" autocomplete="off">
+        <div class="qx-chat-compose-row">
+          <textarea id="qx-chat-input" class="qx-chat-input" rows="2" maxlength="900" placeholder="Hỏi tiếp để đào sâu chủ đề..."></textarea>
+          <button class="qx-chat-send" type="submit">Gửi</button>
+        </div>
+      </form>
+    </section>
+  </div>
 </section>
 
 <script>
@@ -91,11 +93,10 @@
 
   const form = document.getElementById('qx-search-form');
   const input = document.getElementById('qx-search-input');
-  const browseShell = document.getElementById('qx-browse-shell');
+  const stage = document.getElementById('qx-stage');
   const chatShell = document.getElementById('qx-chat-shell');
   const fastWrap = document.getElementById('qx-fast-wrap');
   const fastResults = document.getElementById('qx-fast-results');
-  const chipsWrap = document.getElementById('qx-quick-chips');
   const pivot = document.getElementById('qx-ai-pivot');
   const pivotTitle = document.getElementById('qx-ai-pivot-title');
   const pivotSubtitle = document.getElementById('qx-ai-pivot-subtitle');
@@ -117,6 +118,8 @@
   let searchRequestId = 0;
   let chatRequestId = 0;
   let chatMessages = [];
+  const CHAT_TRANSITION_MS = 190;
+  let chatHideTimer = null;
 
   const normalizeText = (value) => String(value || '')
     .normalize('NFD')
@@ -151,10 +154,22 @@
   const setMode = (nextMode) => {
     mode = nextMode;
     const inChat = nextMode === 'chat';
-    if (browseShell) browseShell.hidden = inChat;
-    if (chatShell) chatShell.hidden = !inChat;
-    if (input) input.disabled = inChat;
-    if (chipsWrap) chipsWrap.hidden = inChat;
+    if (chatShell) {
+      if (chatHideTimer) {
+        clearTimeout(chatHideTimer);
+        chatHideTimer = null;
+      }
+      if (inChat) {
+        chatShell.hidden = false;
+        requestAnimationFrame(() => chatShell.classList.add('is-visible'));
+      } else {
+        chatShell.classList.remove('is-visible');
+        chatHideTimer = window.setTimeout(() => {
+          if (mode !== 'chat' && chatShell) chatShell.hidden = true;
+        }, CHAT_TRANSITION_MS);
+      }
+    }
+    if (stage) stage.classList.toggle('is-chat', inChat);
   };
 
   const hideFast = () => {

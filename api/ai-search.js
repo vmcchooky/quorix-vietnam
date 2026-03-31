@@ -232,7 +232,7 @@ async function callGemini({ query, candidates }) {
   return parseGeminiJson(payload, 'Gemini không trả về JSON hợp lệ.');
 }
 
-async function callGeminiChat({ query, candidates, messages }) {
+async function callGeminiChat({ query, messages }) {
   const apiKey = process.env.GEMINI_CHAT_API_KEY;
   if (!apiKey) {
     const error = new Error('Thiếu GEMINI_CHAT_API_KEY trong biến môi trường.');
@@ -243,24 +243,13 @@ async function callGeminiChat({ query, candidates, messages }) {
   const model = process.env.GEMINI_CHAT_MODEL || 'gemini-3-flash-preview';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const history = Array.isArray(messages) ? messages.slice(-8) : [];
-  const internalContext = candidates.map((item) => [
-    `ID: ${item.id}`,
-    `Title: ${item.title}`,
-    `URL: ${item.url}`,
-    `Section: ${item.section}`,
-    `Tags: ${(item.tags || []).join(', ')}`,
-    `Summary: ${item.summary}`,
-    `Excerpt: ${item.excerpt}`,
-  ].join('\n')).join('\n\n');
 
   const systemInstruction = [
     'Bạn là Quorix AI Chat.',
-    'Nhiệm vụ: trả lời câu hỏi một cách rõ ràng, dễ học, và có cấu trúc.',
+    'Bạn trò chuyện như Gemini/ChatGPT: tự nhiên, rõ ràng, ưu tiên tính chính xác.',
     'Bạn được phép truy cập Internet live bằng Google Search grounding để bổ sung thông tin mới nhất.',
-    'Nếu dùng nguồn nội bộ Quorix thì ưu tiên liên kết lại nguồn đó khi phù hợp.',
-    'Bắt buộc trả về JSON hợp lệ với schema:',
-    '{ "answer": string, "confidence": "high"|"medium"|"low", "matchedIds": number[], "followUps": string[] }',
-    'matchedIds chỉ được lấy từ các ID nội bộ nếu có dùng chúng.',
+    'Hãy trả lời bằng tiếng Việt, có cấu trúc ngắn gọn dễ đọc.',
+    'Nếu có phần chưa chắc chắn, nói rõ mức độ chắc chắn.',
   ].join('\n');
 
   const contents = [];
@@ -275,15 +264,7 @@ async function callGeminiChat({ query, candidates, messages }) {
 
   contents.push({
     role: 'user',
-    parts: [{
-      text: [
-        `Câu hỏi hiện tại: ${query}`,
-        '',
-        internalContext
-          ? `Nguồn nội bộ Quorix (tham khảo nếu phù hợp):\n${internalContext}`
-          : 'Nguồn nội bộ Quorix: không có dữ liệu phù hợp trực tiếp.',
-      ].join('\n'),
-    }],
+    parts: [{ text: query }],
   });
 
   const response = await fetch(url, {
@@ -299,7 +280,6 @@ async function callGeminiChat({ query, candidates, messages }) {
       contents,
       tools: [{ google_search: {} }],
       generationConfig: {
-        responseMimeType: 'application/json',
         temperature: 0.55,
         maxOutputTokens: 1500,
       },
@@ -314,10 +294,20 @@ async function callGeminiChat({ query, candidates, messages }) {
     throw error;
   }
 
-  const parsed = parseGeminiJson(payload, 'Gemini Chat không trả về JSON hợp lệ.');
-  parsed.webSources = extractGroundingSources(payload);
+  const answer = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
+  if (!answer) {
+    const error = new Error('Gemini Chat không trả về nội dung hợp lệ.');
+    error.statusCode = 502;
+    throw error;
+  }
 
-  return parsed;
+  return {
+    answer,
+    confidence: 'medium',
+    matchedIds: [],
+    followUps: [],
+    webSources: extractGroundingSources(payload),
+  };
 }
 
 function buildGeminiNotice(error, model) {
@@ -405,9 +395,9 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const index = await loadIndex(baseUrl);
+    const index = mode === 'chat' ? [] : await loadIndex(baseUrl);
     const queryTokens = tokenize(query);
-    const candidates = buildContextItems(index, queryTokens, topK);
+    const candidates = mode === 'chat' ? [] : buildContextItems(index, queryTokens, topK);
 
     if (mode !== 'chat' && candidates.length === 0) {
       const fallback = createFallbackResponse(query, []);
@@ -424,19 +414,32 @@ module.exports = async (req, res) => {
     let aiResult;
     try {
       if (mode === 'chat') {
-        aiResult = await callGeminiChat({ query, candidates, messages });
+        aiResult = await callGeminiChat({ query, messages });
       } else {
         aiResult = await callGemini({ query, candidates });
       }
     } catch (error) {
-      aiResult = createFallbackResponse(query, candidates);
-      aiResult.error = error.message;
-      aiResult.notice = buildGeminiNotice(
+      const notice = buildGeminiNotice(
         error,
         mode === 'chat'
           ? (process.env.GEMINI_CHAT_MODEL || 'gemini-3-flash-preview')
           : (process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview'),
       );
+      aiResult = mode === 'chat'
+        ? {
+            answer: notice.message,
+            confidence: 'low',
+            matchedIds: [],
+            followUps: [],
+            notice,
+            error: error.message,
+            webSources: [],
+          }
+        : createFallbackResponse(query, candidates);
+      if (mode !== 'chat') {
+        aiResult.error = error.message;
+        aiResult.notice = notice;
+      }
     }
 
     const matchedIds = Array.isArray(aiResult.matchedIds)
