@@ -8,7 +8,7 @@
 {{- end -}}
 <section class="qx-ai-search" data-api-url="{{ $apiURL }}" data-index-url="{{ $indexURL }}" data-fuse-url="{{ $fuseURL }}">
   <header class="qx-search-head">
-    <p class="qx-search-kicker">Powerd by Gemini</p>
+    <p class="qx-search-kicker">Powerd by Gemini and Groq</p>
     <div class="qx-search-brand-row">
       <img class="qx-search-brand-logo" src="/images/brand/quorixAVT.jpg" alt="Quorix Viet Nam" />
       <h1>Quorix AI</h1>
@@ -149,6 +149,135 @@
     if (!tokens.length) return escapeText(source);
     const regex = new RegExp(`(${tokens.map(escapeRegExp).join('|')})`, 'ig');
     return escapeText(source).replace(regex, '<mark>$1</mark>');
+  };
+
+  const renderInlineText = (text) => {
+    let html = escapeText(String(text || ''));
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    return html;
+  };
+
+  const renderRichMessage = (text, role = 'assistant') => {
+    const raw = String(text || '').replace(/\r/g, '');
+    if (!raw) return '<p></p>';
+    if (role === 'user') return `<p>${escapeText(raw).replace(/\n/g, '<br>')}</p>`;
+
+    const lines = raw.split('\n');
+    const html = [];
+    let paragraph = [];
+    let listType = '';
+    let inCode = false;
+    let codeLanguage = '';
+    let codeLines = [];
+
+    const flushParagraph = () => {
+      if (!paragraph.length) return;
+      html.push(`<p>${renderInlineText(paragraph.join(' '))}</p>`);
+      paragraph = [];
+    };
+
+    const flushList = () => {
+      if (!listType) return;
+      html.push(listType === 'ol' ? '</ol>' : '</ul>');
+      listType = '';
+    };
+
+    const flushCode = () => {
+      if (!codeLines.length && !codeLanguage) return;
+      const language = codeLanguage ? `<span class="qx-chat-code-lang">${escapeText(codeLanguage)}</span>` : '';
+      html.push(`<pre><code>${escapeText(codeLines.join('\n'))}</code>${language}</pre>`);
+      codeLines = [];
+      codeLanguage = '';
+    };
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith('```')) {
+        flushParagraph();
+        flushList();
+        if (inCode) {
+          inCode = false;
+          flushCode();
+        } else {
+          inCode = true;
+          codeLanguage = trimmed.replace(/^```/, '').trim();
+          codeLines = [];
+        }
+        return;
+      }
+
+      if (inCode) {
+        codeLines.push(line);
+        return;
+      }
+
+      if (!trimmed) {
+        flushParagraph();
+        flushList();
+        return;
+      }
+
+      const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+      if (heading) {
+        flushParagraph();
+        flushList();
+        const level = Math.min(heading[1].length + 1, 4);
+        html.push(`<h${level}>${renderInlineText(heading[2])}</h${level}>`);
+        return;
+      }
+
+      if (/^>\s+/.test(trimmed)) {
+        flushParagraph();
+        flushList();
+        html.push(`<blockquote>${renderInlineText(trimmed.replace(/^>\s+/, ''))}</blockquote>`);
+        return;
+      }
+
+      if (/^\d+\.\s+/.test(trimmed)) {
+        flushParagraph();
+        if (listType !== 'ol') {
+          flushList();
+          listType = 'ol';
+          html.push('<ol>');
+        }
+        html.push(`<li>${renderInlineText(trimmed.replace(/^\d+\.\s+/, ''))}</li>`);
+        return;
+      }
+
+      if (/^[-*]\s+/.test(trimmed)) {
+        flushParagraph();
+        if (listType !== 'ul') {
+          flushList();
+          listType = 'ul';
+          html.push('<ul>');
+        }
+        html.push(`<li>${renderInlineText(trimmed.replace(/^[-*]\s+/, ''))}</li>`);
+        return;
+      }
+
+      flushList();
+      paragraph.push(trimmed);
+    });
+
+    flushParagraph();
+    flushList();
+    if (inCode) flushCode();
+
+    return html.join('');
+  };
+
+  const resizeChatInput = () => {
+    if (!chatInput) return;
+    chatInput.style.height = 'auto';
+    const minHeight = 56;
+    const maxHeight = 176;
+    const nextHeight = Math.max(minHeight, Math.min(chatInput.scrollHeight, maxHeight));
+    chatInput.style.height = `${nextHeight}px`;
+    chatInput.style.overflowY = chatInput.scrollHeight > maxHeight ? 'auto' : 'hidden';
   };
 
   const setMode = (nextMode) => {
@@ -337,6 +466,10 @@
     chatMessages.forEach((message) => {
       const item = document.createElement('article');
       item.className = `qx-chat-msg ${message.role === 'user' ? 'is-user' : 'is-ai'}${message.loading ? ' is-loading' : ''}`;
+      const meta = document.createElement('p');
+      meta.className = 'qx-chat-meta';
+      meta.textContent = message.role === 'user' ? 'Ban' : 'Quorix AI';
+      item.appendChild(meta);
 
       const bubble = document.createElement('div');
       bubble.className = 'qx-chat-bubble';
@@ -347,7 +480,7 @@
           <span>Quorix đang suy luận...</span>
         `;
       } else {
-        bubble.innerHTML = `<p>${escapeText(message.content || '').replace(/\n/g, '<br>')}</p>`;
+        bubble.innerHTML = renderRichMessage(message.content || '', message.role);
       }
 
       item.appendChild(bubble);
@@ -434,6 +567,7 @@
     chatMessages = [{ role: 'user', content: seed }];
     renderChat();
     if (chatInput) chatInput.value = '';
+    resizeChatInput();
     runChatQuery(seed, true);
   };
 
@@ -441,6 +575,7 @@
     setMode('result');
     if (chatThread) chatThread.innerHTML = '';
     if (chatInput) chatInput.value = '';
+    resizeChatInput();
     chatMessages = [];
   };
 
@@ -484,6 +619,13 @@
   });
 
   input?.addEventListener('input', onTyping);
+  chatInput?.addEventListener('input', resizeChatInput);
+  chatInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      chatForm?.requestSubmit();
+    }
+  });
 
   quickButtons.forEach((button) => {
     button.addEventListener('click', () => {
@@ -508,6 +650,7 @@
     const message = chatInput ? chatInput.value.trim() : '';
     if (!message) return;
     if (chatInput) chatInput.value = '';
+    resizeChatInput();
     runChatQuery(message, false);
   });
 
@@ -515,6 +658,7 @@
   hideFast();
   if (pivot) pivot.hidden = true;
   hideResultCards();
+  resizeChatInput();
   loadFuseAndIndex();
 })();
 </script>
