@@ -70,10 +70,23 @@
       </div>
 
       <div class="qx-ai-answer" id="qx-ai-answer" hidden>
-        <p class="qx-ai-answer-copy" id="qx-ai-answer-copy"></p>
-        <div class="qx-ai-meta">
-          <span id="qx-ai-confidence"></span>
-          <span id="qx-ai-matches"></span>
+        <div class="qx-ai-overview">
+          <div class="qx-ai-overview-badge">AI Overview</div>
+          <p class="qx-ai-answer-copy" id="qx-ai-answer-copy"></p>
+          <div class="qx-ai-meta">
+            <span id="qx-ai-confidence"></span>
+            <span id="qx-ai-matches"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qx-ai-loader" id="qx-ai-loader" hidden aria-live="polite" aria-busy="true">
+        <div class="qx-ai-loader-mark">
+          <img src="/images/brand/quorixAVT.jpg" alt="Quorix" />
+        </div>
+        <div class="qx-ai-loader-copy">
+          <strong>Quorix ?ang suy lu?n</strong>
+          <span>?ang ??c ngu?n v? t?o ph?n gi?i th?ch theo ng? c?nh...</span>
         </div>
       </div>
 
@@ -129,6 +142,7 @@
   const fastResults = document.getElementById('qx-fast-results');
   const emptyState = document.getElementById('qx-ai-empty');
   const answerWrap = document.getElementById('qx-ai-answer');
+  const loader = document.getElementById('qx-ai-loader');
   const answerCopy = document.getElementById('qx-ai-answer-copy');
   const confidence = document.getElementById('qx-ai-confidence');
   const matches = document.getElementById('qx-ai-matches');
@@ -204,6 +218,11 @@
     if (fastStatus) fastStatus.textContent = label;
   };
 
+  const setAiLoading = (isLoading) => {
+    if (loader) loader.hidden = !isLoading;
+    if (answerWrap) answerWrap.classList.toggle('is-loading', isLoading);
+  };
+
   const normalizeText = (value) => String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -260,6 +279,7 @@
 
   const resetViewToIdle = () => {
     if (answerWrap) answerWrap.hidden = true;
+    setAiLoading(false);
     if (sources) sources.hidden = true;
     if (followups) followups.hidden = true;
     renderNotice(null);
@@ -413,7 +433,7 @@
 
     if (items.length === 0) {
       fastResults.innerHTML = `<p class="qx-ai-muted">Không có kết quả nhanh cho “${escapeText(cleaned)}”. Nhấn Enter để hỏi AI.</p>`;
-      setFastStatus('0 k?t qu? nhanh');
+      setFastStatus('0 kết quả nhanh');
       return;
     }
 
@@ -437,27 +457,26 @@
     });
 
     fastResults.appendChild(fragment);
-    setFastStatus(`${items.length} k?t qu? nhanh`);
+    setFastStatus(`${items.length} kết quả nhanh`);
   };
 
   const scheduleFastSearch = () => {
     const query = input ? input.value.trim() : '';
     if (fastTimer) window.clearTimeout(fastTimer);
     fastTimer = window.setTimeout(() => {
-      renderFastResults(query);
       if (!query) {
         resetViewToIdle();
-      } else if (query !== lastSubmittedQuery) {
-        if (answerWrap) answerWrap.hidden = true;
-        if (sources) sources.hidden = true;
-        if (followups) followups.hidden = true;
-        renderNotice(null);
-        setEmptyState({
-          title: 'Nhấn Enter để hỏi AI',
-          body: 'Kết quả nhanh đang hiển thị bên dưới. Enter sẽ gọi AI Quorix để tóm tắt và giải thích theo ngữ cảnh.',
-          linkLabel: '',
-        });
+        return;
       }
+
+      if (answerWrap) answerWrap.hidden = true;
+      if (loader) loader.hidden = true;
+      if (sources) sources.hidden = true;
+      if (followups) followups.hidden = true;
+      renderNotice(null);
+      if (emptyState) emptyState.hidden = true;
+      renderFastResults(query);
+      if (fastRoot) fastRoot.hidden = false;
     }, 120);
   };
 
@@ -513,11 +532,10 @@
   const renderAnswer = (payload, query) => {
     if (emptyState) emptyState.hidden = true;
     if (answerWrap) answerWrap.hidden = false;
+    setAiLoading(false);
     renderNotice(payload.notice || null);
     lastSubmittedQuery = String(query || '').trim();
-    if (fastRoot && lastSubmittedQuery.length >= 2) {
-      fastRoot.hidden = false;
-    }
+    if (fastRoot) fastRoot.hidden = true;
 
     if (answerCopy) answerCopy.textContent = payload.answer || 'Mình chưa đủ dữ liệu để trả lời chắc chắn.';
     if (confidence) confidence.textContent = `Độ chắc: ${String(payload.confidence || 'medium').toUpperCase()}`;
@@ -534,13 +552,13 @@
     const cleaned = String(query || '').trim();
     if (!cleaned) return;
 
-    setLoading(true);
+    setLoading(true, 'Đang suy luận...');
     if (emptyState) emptyState.hidden = true;
     if (answerWrap) answerWrap.hidden = true;
     if (sources) sources.hidden = true;
     if (followups) followups.hidden = true;
+    setAiLoading(true);
     renderNotice(null);
-    renderFastResults(cleaned);
 
     try {
       const response = await fetch(apiUrl, {
@@ -558,6 +576,7 @@
       setLoading(false, data && data.confidence ? `Đã xong · ${String(data.confidence).toUpperCase()}` : 'Đã xong');
     } catch (error) {
       setLoading(false, 'Lỗi tạm thời');
+      setAiLoading(false);
       renderNotice({
         type: 'error',
         title: 'AI Search chưa sẵn sàng',
@@ -585,7 +604,6 @@
       const query = button.dataset.query || button.textContent || '';
       input.value = query;
       input.focus();
-      renderFastResults(query);
       void submitQuery(query);
     });
   });
@@ -601,5 +619,3 @@
 })();
 </script>
 {{ end }}
-
-
