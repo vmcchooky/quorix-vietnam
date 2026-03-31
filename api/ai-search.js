@@ -130,23 +130,112 @@ function buildContextItems(items, queryTokens, topK) {
     }));
 }
 
+function parseCsv(value) {
+  return String(value || '')
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function uniqueNonEmpty(values) {
+  const seen = new Set();
+  const result = [];
+  values.forEach((value) => {
+    const normalized = String(value || '').trim();
+    if (!normalized || seen.has(normalized)) return;
+    seen.add(normalized);
+    result.push(normalized);
+  });
+  return result;
+}
+
+function getEnvList(...keys) {
+  const values = [];
+  keys.forEach((key) => {
+    const raw = process.env[key];
+    if (!raw) return;
+    values.push(...parseCsv(raw));
+  });
+  return uniqueNonEmpty(values);
+}
+
+function normalizeProviderName(name) {
+  return String(name || '').trim().toLowerCase();
+}
+
+function getProviderOrder(mode) {
+  const raw = mode === 'chat'
+    ? (process.env.AI_CHAT_PROVIDER_ORDER || process.env.AI_PROVIDER_ORDER || 'gemini,groq')
+    : (process.env.AI_SEARCH_PROVIDER_ORDER || process.env.AI_PROVIDER_ORDER || 'gemini,groq');
+
+  return uniqueNonEmpty(parseCsv(raw).map(normalizeProviderName))
+    .filter((provider) => ['gemini', 'groq'].includes(provider));
+}
+
+function getProviderKeys(provider, mode) {
+  if (provider === 'gemini') {
+    if (mode === 'chat') {
+      return getEnvList('GEMINI_CHAT_API_KEYS', 'GEMINI_CHAT_API_KEY', 'GEMINI_API_KEYS', 'GEMINI_API_KEY');
+    }
+    return getEnvList('GEMINI_API_KEYS', 'GEMINI_API_KEY');
+  }
+
+  if (provider === 'groq') {
+    return getEnvList('GROQ_API_KEYS', 'GROQ_API_KEY');
+  }
+
+  return [];
+}
+
+function getProviderModel(provider, mode) {
+  if (provider === 'gemini') {
+    return mode === 'chat'
+      ? (process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash')
+      : (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite');
+  }
+
+  if (provider === 'groq') {
+    return mode === 'chat'
+      ? (process.env.GROQ_CHAT_MODEL || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile')
+      : (process.env.GROQ_SEARCH_MODEL || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile');
+  }
+
+  return '';
+}
+
+function parseJsonObjectFromText(text, fallbackMessage) {
+  const raw = String(text || '').trim();
+  if (!raw) {
+    const error = new Error(fallbackMessage);
+    error.statusCode = 502;
+    throw error;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    // Try fenced code and loose JSON extraction.
+  }
+
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = fenced ? fenced[1] : raw;
+  const objectMatch = candidate.match(/\{[\s\S]*\}/);
+  if (objectMatch) {
+    try {
+      return JSON.parse(objectMatch[0]);
+    } catch (error) {
+      // Continue to final error.
+    }
+  }
+
+  const err = new Error(fallbackMessage);
+  err.statusCode = 502;
+  throw err;
+}
+
 function parseGeminiJson(payload, fallbackMessage) {
   const text = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '{}';
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
-    const match = text.match(/\{[\s\S]*\}/);
-    parsed = match ? JSON.parse(match[0]) : null;
-  }
-
-  if (!parsed || typeof parsed !== 'object') {
-    const err = new Error(fallbackMessage);
-    err.statusCode = 502;
-    throw err;
-  }
-
-  return parsed;
+  return parseJsonObjectFromText(text, fallbackMessage);
 }
 
 function extractGroundingSources(payload) {
@@ -165,18 +254,8 @@ function extractGroundingSources(payload) {
   return sources;
 }
 
-async function callGemini({ query, candidates }) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    const error = new Error('Thiếu GEMINI_API_KEY trong biến môi trường.');
-    error.statusCode = 500;
-    throw error;
-  }
-
-  const model = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
-  const prompt = [
+function buildSearchPrompt(query, candidates) {
+  return [
     'Bạn là trợ lý tìm kiếm nội dung của Quorix Viet Nam.',
     'Chỉ dùng các nguồn được cung cấp bên dưới. Không bịa link, không tạo nguồn mới.',
     'Trả lời rõ ràng, có chiều sâu vừa đủ (4-8 câu), bằng tiếng Việt.',
@@ -199,6 +278,33 @@ async function callGemini({ query, candidates }) {
       '',
     ].join('\n')),
   ].join('\n');
+}
+
+function buildChatSystemInstruction() {
+  return [
+    'Bạn là Quorix AI Chat.',
+    'Bạn trò chuyện như Gemini/ChatGPT: tự nhiên, rõ ràng, ưu tiên tính chính xác.',
+    'Nếu có phần chưa chắc chắn, nói rõ mức độ chắc chắn.',
+    'Trả lời bằng tiếng Việt, trình bày dễ đọc.',
+  ].join('\n');
+}
+
+function normalizeTextCompletion(payload, fallbackMessage) {
+  const answer = String(payload || '').trim();
+  if (answer) return answer;
+  const error = new Error(fallbackMessage);
+  error.statusCode = 502;
+  throw error;
+}
+
+function extractGroqText(payload, fallbackMessage) {
+  const text = payload?.choices?.[0]?.message?.content;
+  return normalizeTextCompletion(text, fallbackMessage);
+}
+
+async function callGeminiSearch({ query, candidates, apiKey, model }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const prompt = buildSearchPrompt(query, candidates);
 
   const response = await fetch(url, {
     method: 'POST',
@@ -232,25 +338,9 @@ async function callGemini({ query, candidates }) {
   return parseGeminiJson(payload, 'Gemini không trả về JSON hợp lệ.');
 }
 
-async function callGeminiChat({ query, messages }) {
-  const apiKey = process.env.GEMINI_CHAT_API_KEY;
-  if (!apiKey) {
-    const error = new Error('Thiếu GEMINI_CHAT_API_KEY trong biến môi trường.');
-    error.statusCode = 500;
-    throw error;
-  }
-
-  const model = process.env.GEMINI_CHAT_MODEL || 'gemini-3-flash-preview';
+async function callGeminiChat({ query, messages, apiKey, model }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-  const history = Array.isArray(messages) ? messages.slice(-8) : [];
-
-  const systemInstruction = [
-    'Bạn là Quorix AI Chat.',
-    'Bạn trò chuyện như Gemini/ChatGPT: tự nhiên, rõ ràng, ưu tiên tính chính xác.',
-    'Bạn được phép truy cập Internet live bằng Google Search grounding để bổ sung thông tin mới nhất.',
-    'Hãy trả lời bằng tiếng Việt, có cấu trúc ngắn gọn dễ đọc.',
-    'Nếu có phần chưa chắc chắn, nói rõ mức độ chắc chắn.',
-  ].join('\n');
+  const history = Array.isArray(messages) ? messages.slice(-10) : [];
 
   const contents = [];
   history.forEach((message) => {
@@ -275,7 +365,7 @@ async function callGeminiChat({ query, messages }) {
     },
     body: JSON.stringify({
       systemInstruction: {
-        parts: [{ text: systemInstruction }],
+        parts: [{ text: buildChatSystemInstruction() }],
       },
       contents,
       tools: [{ google_search: {} }],
@@ -310,36 +400,197 @@ async function callGeminiChat({ query, messages }) {
   };
 }
 
-function buildGeminiNotice(error, model) {
-  const message = String(error?.message || '');
-  const lower = message.toLowerCase();
-  const statusCode = Number(error?.statusCode || 0);
-  const modelLabel = `\`${model}\``;
+async function callGroqSearch({ query, candidates, apiKey, model }) {
+  const prompt = buildSearchPrompt(query, candidates);
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: 'system',
+          content: 'Bạn là trợ lý AI. Luôn trả về JSON hợp lệ, không thêm văn bản ngoài JSON.',
+        },
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+      temperature: 0.35,
+      max_tokens: 1100,
+    }),
+  });
 
-  if (
-    statusCode === 404 ||
-    statusCode === 403 ||
-    /(not found|permission denied|not enabled|not available|unsupported|disabled|not activated|could not find|model.*unavailable|model.*disabled|resource.*not found)/i.test(lower)
-  ) {
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.error?.message || 'Groq API trả về lỗi.';
+    const error = new Error(message);
+    error.statusCode = response.status;
+    throw error;
+  }
+
+  const text = extractGroqText(payload, 'Groq không trả về nội dung hợp lệ.');
+  return parseJsonObjectFromText(text, 'Groq không trả về JSON hợp lệ.');
+}
+
+async function callGroqChat({ query, messages, apiKey, model }) {
+  const history = Array.isArray(messages) ? messages.slice(-10) : [];
+  const chatMessages = [
+    {
+      role: 'system',
+      content: buildChatSystemInstruction(),
+    },
+    ...history
+      .filter((message) => String(message?.content || '').trim())
+      .map((message) => ({
+        role: message.role === 'assistant' ? 'assistant' : 'user',
+        content: String(message.content).trim(),
+      })),
+    {
+      role: 'user',
+      content: query,
+    },
+  ];
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: chatMessages,
+      temperature: 0.6,
+      max_tokens: 1200,
+    }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.error?.message || 'Groq Chat API trả về lỗi.';
+    const error = new Error(message);
+    error.statusCode = response.status;
+    throw error;
+  }
+
+  const answer = extractGroqText(payload, 'Groq Chat không trả về nội dung hợp lệ.');
+  return {
+    answer,
+    confidence: 'medium',
+    matchedIds: [],
+    followUps: [],
+    webSources: [],
+  };
+}
+
+async function callWithProviderRotation({ mode, query, candidates, messages }) {
+  const providerOrder = getProviderOrder(mode);
+  const attempts = [];
+
+  for (const provider of providerOrder) {
+    const model = getProviderModel(provider, mode);
+    const keys = getProviderKeys(provider, mode);
+
+    if (!model) {
+      attempts.push({ provider, reason: 'missing_model' });
+      continue;
+    }
+
+    if (!keys.length) {
+      attempts.push({ provider, reason: 'missing_key' });
+      continue;
+    }
+
+    for (let index = 0; index < keys.length; index += 1) {
+      const apiKey = keys[index];
+      try {
+        let result;
+        if (provider === 'gemini') {
+          result = mode === 'chat'
+            ? await callGeminiChat({ query, messages, apiKey, model })
+            : await callGeminiSearch({ query, candidates, apiKey, model });
+        } else {
+          result = mode === 'chat'
+            ? await callGroqChat({ query, messages, apiKey, model })
+            : await callGroqSearch({ query, candidates, apiKey, model });
+        }
+
+        return {
+          result,
+          provider,
+          model,
+          attempts,
+        };
+      } catch (error) {
+        attempts.push({
+          provider,
+          model,
+          keyIndex: index + 1,
+          statusCode: Number(error?.statusCode || 0),
+          message: String(error?.message || 'Unknown provider error'),
+        });
+      }
+    }
+  }
+
+  const error = new Error('Tất cả provider AI hiện đều không khả dụng hoặc đã hết quota.');
+  error.statusCode = 503;
+  error.providerOrder = providerOrder;
+  error.attempts = attempts;
+  throw error;
+}
+
+function buildProviderNotice(error, mode) {
+  const attempts = Array.isArray(error?.attempts) ? error.attempts : [];
+  const statuses = attempts.map((item) => Number(item.statusCode || 0)).filter((code) => code > 0);
+  const messages = attempts.map((item) => String(item.message || '').toLowerCase());
+
+  const hasMissingModel = attempts.some((item) => item.reason === 'missing_model');
+  const hasMissingKey = attempts.some((item) => item.reason === 'missing_key');
+  const hasQuota = statuses.includes(429) || messages.some((message) => /(quota|rate limit|resource exhausted|too many requests)/i.test(message));
+  const hasModelAccessIssue = statuses.includes(403) || statuses.includes(404) || messages.some((message) => /(not found|permission denied|not enabled|not available|unsupported|disabled|model.*unavailable)/i.test(message));
+
+  if (hasMissingKey) {
     return {
-      type: 'model',
-      title: 'Gemini model chưa khả dụng',
-      message: `Model ${modelLabel} chưa được bật cho project/API key hiện tại hoặc chưa khả dụng trong khu vực này. Hãy kiểm tra quyền truy cập trong Google AI Studio / Vertex AI, hoặc đổi \`GEMINI_MODEL\` sang một model đang hoạt động rồi deploy lại.`,
+      type: 'config',
+      title: 'Thiếu API key provider',
+      message: 'Bạn chưa cấu hình đủ API key cho các provider trong thứ tự xoay vòng. Hãy thêm key cho Gemini/Groq để fallback hoạt động.',
     };
   }
 
-  if (statusCode === 429 || /(quota|rate limit|too many requests|resource exhausted)/i.test(lower)) {
+  if (hasMissingModel) {
+    return {
+      type: 'config',
+      title: 'Thiếu model provider',
+      message: 'Một hoặc nhiều provider chưa có model cấu hình. Hãy set GEMINI_MODEL, GEMINI_CHAT_MODEL, GROQ_MODEL (hoặc GROQ_CHAT_MODEL/GROQ_SEARCH_MODEL).',
+    };
+  }
+
+  if (hasQuota) {
     return {
       type: 'quota',
-      title: 'Gemini đang bị giới hạn quota',
-      message: 'Yêu cầu đã chạm quota hoặc rate limit của Gemini. Hãy thử lại sau ít phút, hoặc tăng quota trong Google Cloud nếu cần.',
+      title: 'Các provider đang chạm quota',
+      message: 'Nhiều provider đang bị giới hạn quota/rate-limit. Hãy thử lại sau ít phút hoặc thêm key dự phòng để hệ thống xoay vòng tốt hơn.',
+    };
+  }
+
+  if (hasModelAccessIssue) {
+    return {
+      type: 'model',
+      title: 'Model chưa khả dụng',
+      message: 'Một số model chưa được bật hoặc không khả dụng cho API key hiện tại. Hãy kiểm tra model name và quyền truy cập của từng provider.',
     };
   }
 
   return {
     type: 'error',
-    title: 'Gemini tạm thời không phản hồi',
-    message: message || 'Gemini đang gặp lỗi tạm thời. Hệ thống đã tự chuyển sang chế độ fallback từ nội dung site.',
+    title: mode === 'chat' ? 'Chat AI tạm thời không phản hồi' : 'AI Search tạm thời không phản hồi',
+    message: String(error?.message || 'Hệ thống AI đang gặp lỗi tạm thời.'),
   };
 }
 
@@ -412,19 +663,17 @@ module.exports = async (req, res) => {
     }
 
     let aiResult;
+    let providerMeta = null;
+    let providerAttempts = [];
+
     try {
-      if (mode === 'chat') {
-        aiResult = await callGeminiChat({ query, messages });
-      } else {
-        aiResult = await callGemini({ query, candidates });
-      }
+      const routed = await callWithProviderRotation({ mode, query, candidates, messages });
+      aiResult = routed.result;
+      providerMeta = { provider: routed.provider, model: routed.model };
+      providerAttempts = routed.attempts;
     } catch (error) {
-      const notice = buildGeminiNotice(
-        error,
-        mode === 'chat'
-          ? (process.env.GEMINI_CHAT_MODEL || 'gemini-3-flash-preview')
-          : (process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview'),
-      );
+      const notice = buildProviderNotice(error, mode);
+      providerAttempts = Array.isArray(error?.attempts) ? error.attempts : [];
       aiResult = mode === 'chat'
         ? {
             answer: notice.message,
@@ -502,6 +751,9 @@ module.exports = async (req, res) => {
       matchedCount: citations.length,
       followUps: Array.isArray(aiResult.followUps) ? aiResult.followUps.slice(0, 5) : [],
       notice: aiResult.notice || null,
+      provider: providerMeta?.provider || null,
+      model: providerMeta?.model || null,
+      attempts: providerAttempts,
     });
   } catch (error) {
     res.status(error.statusCode || 500).json({
