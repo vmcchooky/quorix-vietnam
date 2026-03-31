@@ -212,6 +212,96 @@ async function callGemini({ query, candidates }) {
   return parsed;
 }
 
+async function callGeminiChat({ query, candidates, messages }) {
+  const apiKey = process.env.GEMINI_CHAT_API_KEY;
+  if (!apiKey) {
+    const error = new Error('Thiếu GEMINI_CHAT_API_KEY trong biến môi trường.');
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const model = process.env.GEMINI_CHAT_MODEL || 'gemini-3-flash-preview';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const history = Array.isArray(messages)
+    ? messages.slice(-8).map((message) => {
+      const roleLabel = message.role === 'assistant' ? 'Trợ lý' : 'Người dùng';
+      const content = String(message.content || '').trim();
+      return content ? `${roleLabel}: ${content}` : '';
+    }).filter(Boolean).join('\n')
+    : '';
+
+  const prompt = [
+    'Bạn là Quorix Chat, trợ lý đọc và học theo ngữ cảnh.',
+    'Hãy trả lời bằng tiếng Việt tự nhiên, rõ ràng, hữu ích và dễ hiểu.',
+    'Bạn có thể trả lời kiến thức bên ngoài site nếu cần, nhưng nếu có nguồn nội bộ liên quan thì hãy ưu tiên nhắc tới.',
+    'Nếu dùng nguồn nội bộ, chỉ dùng các nguồn được cung cấp bên dưới. Không bịa link.',
+    'Đầu ra PHẢI là JSON hợp lệ với các trường:',
+    '{ "answer": string, "confidence": "high"|"medium"|"low", "matchedIds": number[], "followUps": string[] }',
+    'matchedIds chỉ được chọn từ ID của các nguồn đã cung cấp.',
+    '',
+    `Tin nhắn hiện tại của người dùng: ${query}`,
+    history ? `Lịch sử hội thoại:\n${history}` : 'Lịch sử hội thoại: (trống)',
+    '',
+    'Nguồn nội bộ có thể tham chiếu:',
+    ...candidates.map((item) => [
+      `ID: ${item.id}`,
+      `Title: ${item.title}`,
+      `URL: ${item.url}`,
+      `Section: ${item.section}`,
+      `Tags: ${(item.tags || []).join(', ')}`,
+      `Summary: ${item.summary}`,
+      `Excerpt: ${item.excerpt}`,
+      '',
+    ].join('\n')),
+  ].join('\n');
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }],
+        },
+      ],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.45,
+        maxOutputTokens: 1100,
+      },
+    }),
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = payload?.error?.message || 'Gemini Chat API trả về lỗi.';
+    const error = new Error(message);
+    error.statusCode = response.status;
+    throw error;
+  }
+
+  const text = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '{}';
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    const match = text.match(/\{[\s\S]*\}/);
+    parsed = match ? JSON.parse(match[0]) : null;
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    const error = new Error('Gemini Chat không trả về JSON hợp lệ.');
+    error.statusCode = 502;
+    throw error;
+  }
+
+  return parsed;
+}
+
 function buildGeminiNotice(error, model) {
   const message = String(error?.message || '');
   const lower = message.toLowerCase();
@@ -276,6 +366,12 @@ module.exports = async (req, res) => {
 
   try {
     const baseUrl = getBaseUrl(req);
+    const mode = String(req.method === 'GET' ? req.query.mode || 'search' : req.body?.mode || 'search').toLowerCase();
+    const messages = req.method === 'GET'
+      ? []
+      : Array.isArray(req.body?.messages)
+        ? req.body.messages
+        : [];
     const query = req.method === 'GET'
       ? String(req.query.q || '').trim()
       : String((req.body && req.body.query) || '').trim();
@@ -295,7 +391,7 @@ module.exports = async (req, res) => {
     const queryTokens = tokenize(query);
     const candidates = buildContextItems(index, queryTokens, topK);
 
-    if (candidates.length === 0) {
+    if (mode !== 'chat' && candidates.length === 0) {
       const fallback = createFallbackResponse(query, []);
       res.setHeader('Cache-Control', 'no-store');
       res.status(200).json({
@@ -309,11 +405,20 @@ module.exports = async (req, res) => {
 
     let aiResult;
     try {
-      aiResult = await callGemini({ query, candidates });
+      if (mode === 'chat') {
+        aiResult = await callGeminiChat({ query, candidates, messages });
+      } else {
+        aiResult = await callGemini({ query, candidates });
+      }
     } catch (error) {
       aiResult = createFallbackResponse(query, candidates);
       aiResult.error = error.message;
-      aiResult.notice = buildGeminiNotice(error, process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview');
+      aiResult.notice = buildGeminiNotice(
+        error,
+        mode === 'chat'
+          ? (process.env.GEMINI_CHAT_MODEL || 'gemini-3-flash-preview')
+          : (process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview'),
+      );
     }
 
     const matchedIds = Array.isArray(aiResult.matchedIds)
@@ -350,6 +455,7 @@ module.exports = async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).json({
       query,
+      mode,
       answer: aiResult.answer || '',
       confidence: aiResult.confidence || 'medium',
       citations,

@@ -40,7 +40,8 @@
     <button class="qx-ai-chip js-ai-query" type="button" data-query="Cho tôi bài gần đây nhất có liên quan đến networking.">Networking mới</button>
   </div>
 
-  <div class="qx-ai-grid">
+  <div class="qx-ai-browse-shell" id="qx-ai-browse-shell">
+    <div class="qx-ai-grid">
     <section class="qx-ai-panel qx-ai-answer-panel" aria-live="polite">
       <div class="qx-ai-panel-head">
         <div>
@@ -80,15 +81,15 @@
         </div>
       </div>
 
-      <div class="qx-ai-loader" id="qx-ai-loader" hidden aria-live="polite" aria-busy="true">
+      <button class="qx-ai-loader" id="qx-ai-loader" type="button" hidden aria-live="polite" aria-busy="true" aria-label="Mở Quorix Chat">
         <div class="qx-ai-loader-mark">
           <img src="/images/brand/quorixAVT.jpg" alt="Quorix" />
         </div>
         <div class="qx-ai-loader-copy">
-          <strong>Quorix ?ang suy lu?n</strong>
-          <span>?ang ??c ngu?n v? t?o ph?n gi?i th?ch theo ng? c?nh...</span>
+          <strong>Quorix đang suy luận</strong>
+          <span>Đang đọc nguồn và tạo phần giải thích theo ngữ cảnh...</span>
         </div>
-      </div>
+      </button>
 
       <div class="qx-ai-sources" id="qx-ai-sources" hidden></div>
       <div class="qx-ai-followups" id="qx-ai-followups" hidden></div>
@@ -121,7 +122,28 @@
         </ul>
       </div>
     </aside>
+    </div>
   </div>
+
+  <section class="qx-ai-chat-shell" id="qx-ai-chat-shell" hidden>
+    <div class="qx-ai-chat-topbar">
+      <button class="qx-ai-chat-back" id="qx-ai-chat-back" type="button">Trở về</button>
+      <div class="qx-ai-chat-head">
+        <p class="qx-ai-panel-kicker">Quorix Chat</p>
+        <h2 id="qx-ai-chat-context">Sẵn sàng trò chuyện</h2>
+      </div>
+    </div>
+
+    <div class="qx-ai-chat-thread" id="qx-ai-chat-thread" aria-live="polite"></div>
+
+    <form class="qx-ai-chat-compose" id="qx-ai-chat-form" autocomplete="off">
+      <label class="qx-ai-chat-label" for="qx-ai-chat-input">Tin nhắn</label>
+      <div class="qx-ai-chat-compose-row">
+        <textarea id="qx-ai-chat-input" class="qx-ai-chat-input" rows="2" maxlength="900" placeholder="Nhập câu hỏi tiếp theo..."></textarea>
+        <button class="qx-ai-chat-send" type="submit">Gửi</button>
+      </div>
+    </form>
+  </section>
 </section>
 
 <script>
@@ -148,6 +170,13 @@
   const matches = document.getElementById('qx-ai-matches');
   const sources = document.getElementById('qx-ai-sources');
   const followups = document.getElementById('qx-ai-followups');
+  const browseShell = document.getElementById('qx-ai-browse-shell');
+  const chatShell = document.getElementById('qx-ai-chat-shell');
+  const chatBack = document.getElementById('qx-ai-chat-back');
+  const chatThread = document.getElementById('qx-ai-chat-thread');
+  const chatForm = document.getElementById('qx-ai-chat-form');
+  const chatInput = document.getElementById('qx-ai-chat-input');
+  const chatContext = document.getElementById('qx-ai-chat-context');
   const recentWrap = document.getElementById('qx-ai-recent');
   const queryButtons = Array.from(document.querySelectorAll('.js-ai-query'));
   const recentKey = 'qx:ai-search-history:v1';
@@ -162,6 +191,10 @@
   let fastLoadError = '';
   let fastTimer = null;
   let lastSubmittedQuery = '';
+  let activeMode = 'browse';
+  let browseRequestId = 0;
+  let chatRequestId = 0;
+  let chatMessages = [];
 
   const loadRecent = () => {
     try {
@@ -221,6 +254,112 @@
   const setAiLoading = (isLoading) => {
     if (loader) loader.hidden = !isLoading;
     if (answerWrap) answerWrap.classList.toggle('is-loading', isLoading);
+  };
+
+  const setViewMode = (mode) => {
+    activeMode = mode;
+    if (browseShell) browseShell.hidden = mode === 'chat';
+    if (chatShell) chatShell.hidden = mode !== 'chat';
+    if (input) input.disabled = mode === 'chat';
+  };
+
+  const renderChatThread = (messages) => {
+    if (!chatThread) return;
+    chatThread.innerHTML = '';
+
+    messages.forEach((message) => {
+      const row = document.createElement('article');
+      row.className = `qx-chat-msg qx-chat-msg-${message.role}${message.loading ? ' is-loading' : ''}`;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'qx-chat-bubble';
+
+      if (message.loading) {
+        bubble.innerHTML = `
+          <span class="qx-chat-dots" aria-hidden="true">
+            <i></i><i></i><i></i>
+          </span>
+          <span class="qx-chat-loading-text">Quorix đang suy luận...</span>
+        `;
+      } else {
+        const content = document.createElement('p');
+        content.innerHTML = escapeText(message.content || '').replace(/\n/g, '<br>');
+        bubble.appendChild(content);
+      }
+
+      row.appendChild(bubble);
+
+      if (message.sources && message.sources.length) {
+        const sourcesWrap = document.createElement('div');
+        sourcesWrap.className = 'qx-chat-sources';
+        message.sources.forEach((source, index) => {
+          const sourceCard = document.createElement('article');
+          sourceCard.className = 'qx-chat-source';
+          sourceCard.innerHTML = `
+            <p class="qx-chat-source-kicker">Nguồn ${index + 1}</p>
+            <h3><a href="${source.url}" target="_self" rel="noopener">${source.title}</a></h3>
+            <p>${source.reason || ''}</p>
+          `;
+          sourcesWrap.appendChild(sourceCard);
+        });
+        row.appendChild(sourcesWrap);
+      }
+
+      if (message.followUps && message.followUps.length) {
+        const followWrap = document.createElement('div');
+        followWrap.className = 'qx-chat-followups';
+        message.followUps.forEach((item) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'qx-chat-followup-chip';
+          button.textContent = item;
+          button.addEventListener('click', () => {
+            if (chatInput) chatInput.value = item;
+            void submitChatQuery(item, false);
+          });
+          followWrap.appendChild(button);
+        });
+        row.appendChild(followWrap);
+      }
+
+      chatThread.appendChild(row);
+    });
+
+    chatThread.scrollTop = chatThread.scrollHeight;
+  };
+
+  const openChatMode = (query) => {
+    const cleaned = String(query || '').trim();
+    if (!cleaned) return;
+
+    setViewMode('chat');
+    setLoading(false);
+    setAiLoading(false);
+    renderNotice(null);
+    if (fastRoot) fastRoot.hidden = true;
+    if (emptyState) emptyState.hidden = true;
+    if (answerWrap) answerWrap.hidden = true;
+    if (sources) sources.hidden = true;
+    if (followups) followups.hidden = true;
+    if (chatContext) chatContext.textContent = cleaned;
+    chatMessages = [{ role: 'user', content: cleaned }];
+    renderChatThread([
+      { role: 'user', content: cleaned },
+      { role: 'assistant', loading: true, content: '' },
+    ]);
+    if (chatInput) chatInput.value = '';
+    if (chatInput) chatInput.focus();
+    void submitChatQuery(cleaned, true);
+  };
+
+  const exitChatMode = () => {
+    setViewMode('browse');
+    setLoading(false);
+    setAiLoading(false);
+    if (chatThread) chatThread.innerHTML = '';
+    chatMessages = [];
+    if (chatInput) chatInput.value = '';
+    if (chatContext) chatContext.textContent = 'Sẵn sàng trò chuyện';
   };
 
   const normalizeText = (value) => String(value || '')
@@ -530,6 +669,7 @@
   };
 
   const renderAnswer = (payload, query) => {
+    if (activeMode !== 'browse') return;
     if (emptyState) emptyState.hidden = true;
     if (answerWrap) answerWrap.hidden = false;
     setAiLoading(false);
@@ -551,6 +691,7 @@
   const submitQuery = async (query) => {
     const cleaned = String(query || '').trim();
     if (!cleaned) return;
+    const requestId = ++browseRequestId;
 
     setLoading(true, 'Đang suy luận...');
     if (emptyState) emptyState.hidden = true;
@@ -572,9 +713,16 @@
         throw new Error((data && data.error) || 'AI Search đang tạm lỗi.');
       }
 
+      if (requestId !== browseRequestId || activeMode !== 'browse') {
+        return;
+      }
+
       renderAnswer(data || {}, cleaned);
       setLoading(false, data && data.confidence ? `Đã xong · ${String(data.confidence).toUpperCase()}` : 'Đã xong');
     } catch (error) {
+      if (requestId !== browseRequestId || activeMode !== 'browse') {
+        return;
+      }
       setLoading(false, 'Lỗi tạm thời');
       setAiLoading(false);
       renderNotice({
@@ -589,6 +737,82 @@
           linkLabel: 'Quay lại Posts',
         });
       }
+    }
+  };
+
+  const submitChatQuery = async (query, isInitial = false) => {
+    const cleaned = String(query || '').trim();
+    if (!cleaned) return;
+    const requestId = ++chatRequestId;
+
+    setViewMode('chat');
+    setLoading(true, 'Đang suy luận...');
+    setAiLoading(true);
+    renderNotice(null);
+
+    if (!isInitial) {
+      chatMessages.push({ role: 'user', content: cleaned });
+    }
+
+    renderChatThread([
+      ...chatMessages,
+      { role: 'assistant', loading: true, content: '' },
+    ]);
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: cleaned,
+          mode: 'chat',
+          topK: 5,
+          messages: chatMessages,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error((data && data.error) || 'AI Chat đang tạm lỗi.');
+      }
+
+      if (requestId !== chatRequestId || activeMode !== 'chat') {
+        return;
+      }
+
+      chatMessages.push({
+        role: 'assistant',
+        content: data.answer || 'Mình chưa đủ dữ liệu để trả lời chắc chắn.',
+        sources: Array.isArray(data.citations)
+          ? data.citations.slice(0, 5).map((item) => ({
+            title: item.title,
+            url: item.url,
+            reason: item.reason,
+          }))
+          : [],
+        followUps: Array.isArray(data.followUps) ? data.followUps.slice(0, 5) : [],
+      });
+
+      renderChatThread(chatMessages);
+      setLoading(false, data && data.confidence ? `Đã xong · ${String(data.confidence).toUpperCase()}` : 'Đã xong');
+      setAiLoading(false);
+    } catch (error) {
+      if (requestId !== chatRequestId || activeMode !== 'chat') {
+        return;
+      }
+
+      chatMessages.push({
+        role: 'assistant',
+        content: error.message || 'AI Chat đang tạm lỗi.',
+      });
+      renderChatThread(chatMessages);
+      setLoading(false, 'Lỗi tạm thời');
+      setAiLoading(false);
+      renderNotice({
+        type: 'error',
+        title: 'AI Chat chưa sẵn sàng',
+        message: error.message || 'Không thể kết nối tới AI Chat.',
+      });
     }
   };
 
@@ -607,6 +831,34 @@
       void submitQuery(query);
     });
   });
+
+  if (loader) {
+    loader.addEventListener('click', () => {
+      const query = input.value.trim() || lastSubmittedQuery;
+      openChatMode(query);
+    });
+    loader.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        const query = input.value.trim() || lastSubmittedQuery;
+        openChatMode(query);
+      }
+    });
+  }
+
+  if (chatBack) {
+    chatBack.addEventListener('click', exitChatMode);
+  }
+
+  if (chatForm) {
+    chatForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const message = chatInput ? chatInput.value.trim() : '';
+      if (!message) return;
+      if (chatInput) chatInput.value = '';
+      void submitChatQuery(message, false);
+    });
+  }
 
   renderRecent();
   resetViewToIdle();
