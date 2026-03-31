@@ -75,7 +75,11 @@
       <form id="qx-chat-form" class="qx-chat-form" autocomplete="off">
         <div class="qx-chat-compose-row">
           <textarea id="qx-chat-input" class="qx-chat-input" rows="2" maxlength="900" placeholder="Hỏi tiếp để đào sâu chủ đề..."></textarea>
-          <button class="qx-chat-send" type="submit">Gửi</button>
+          <button class="qx-chat-send" type="submit" aria-label="Gửi tin nhắn">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M20.7 3.3a1 1 0 0 0-1.03-.23L3.7 8.95a1 1 0 0 0 .03 1.88l6.18 2.22 2.22 6.18a1 1 0 0 0 1.88.03l5.88-15.96a1 1 0 0 0-.2-1.03Zm-7.1 13.1-1.48-4.13a1 1 0 0 0-.6-.6L7.4 10.2l10.02-3.7-3.82 9.9Z" />
+            </svg>
+          </button>
         </div>
       </form>
     </section>
@@ -109,6 +113,7 @@
   const chatThread = document.getElementById('qx-chat-thread');
   const chatForm = document.getElementById('qx-chat-form');
   const chatInput = document.getElementById('qx-chat-input');
+  const chatSend = chatForm ? chatForm.querySelector('.qx-chat-send') : null;
   const quickButtons = Array.from(document.querySelectorAll('.qx-quick-chip'));
 
   let fuseInstance = null;
@@ -120,6 +125,7 @@
   let chatMessages = [];
   const CHAT_TRANSITION_MS = 190;
   let chatHideTimer = null;
+  let chatSettleTimer = null;
 
   const normalizeText = (value) => String(value || '')
     .normalize('NFD')
@@ -280,6 +286,33 @@
     chatInput.style.overflowY = chatInput.scrollHeight > maxHeight ? 'auto' : 'hidden';
   };
 
+  const syncComposerState = () => {
+    if (!chatForm || !chatInput) return;
+    const hasValue = chatInput.value.trim().length > 0;
+    const isFocused = document.activeElement === chatInput;
+    chatForm.classList.toggle('is-focused', isFocused);
+    chatForm.classList.toggle('has-value', hasValue);
+    if (chatSend) chatSend.disabled = !hasValue;
+  };
+
+  const setThinkingState = (isThinking) => {
+    if (!chatShell) return;
+    if (chatSettleTimer) {
+      clearTimeout(chatSettleTimer);
+      chatSettleTimer = null;
+    }
+    if (isThinking) {
+      chatShell.classList.add('is-thinking');
+      chatShell.classList.remove('is-settled');
+      return;
+    }
+    chatShell.classList.remove('is-thinking');
+    chatShell.classList.add('is-settled');
+    chatSettleTimer = window.setTimeout(() => {
+      chatShell?.classList.remove('is-settled');
+    }, 360);
+  };
+
   const setMode = (nextMode) => {
     mode = nextMode;
     const inChat = nextMode === 'chat';
@@ -346,7 +379,8 @@
     const fragment = document.createDocumentFragment();
     list.forEach((item, index) => {
       const card = document.createElement('article');
-      card.className = 'qx-source-card';
+      card.className = 'qx-source-card is-fresh';
+      card.style.setProperty('--qx-source-index', String(index));
       card.innerHTML = `
         <p class="qx-source-kicker">Nguồn ${index + 1}</p>
         <h3><a href="${escapeText(item.url || '#')}" target="_self" rel="noopener">${escapeText(item.title || 'Nguồn liên quan')}</a></h3>
@@ -465,7 +499,7 @@
 
     chatMessages.forEach((message) => {
       const item = document.createElement('article');
-      item.className = `qx-chat-msg ${message.role === 'user' ? 'is-user' : 'is-ai'}${message.loading ? ' is-loading' : ''}`;
+      item.className = `qx-chat-msg ${message.role === 'user' ? 'is-user' : 'is-ai'}${message.loading ? ' is-loading' : ''}${message.animateIn ? ' is-fresh' : ''}`;
       const meta = document.createElement('p');
       meta.className = 'qx-chat-meta';
       meta.textContent = message.role === 'user' ? 'Ban' : 'Quorix AI';
@@ -490,7 +524,8 @@
         sourceWrap.className = 'qx-chat-sources';
         message.sources.forEach((source, index) => {
           const sourceCard = document.createElement('article');
-          sourceCard.className = 'qx-chat-source-card';
+          sourceCard.className = `qx-chat-source-card${message.animateIn ? ' is-fresh' : ''}`;
+          sourceCard.style.setProperty('--qx-source-index', String(index));
           sourceCard.innerHTML = `
             <p class="qx-source-kicker">Nguồn ${index + 1}</p>
             <h3><a href="${escapeText(source.url || '#')}" target="_blank" rel="noopener noreferrer">${escapeText(source.title || source.url || 'Nguồn web')}</a></h3>
@@ -504,6 +539,9 @@
     });
 
     chatThread.scrollTop = chatThread.scrollHeight;
+    chatMessages.forEach((message) => {
+      if (message.animateIn) message.animateIn = false;
+    });
   };
 
   const runChatQuery = async (message, isInitial = false) => {
@@ -516,6 +554,7 @@
       chatMessages.push({ role: 'user', content: cleaned });
     }
 
+    setThinkingState(true);
     chatMessages.push({ role: 'assistant', loading: true, content: '' });
     renderChat();
 
@@ -547,14 +586,21 @@
         role: 'assistant',
         content: data.answer || 'Mình chưa có đủ dữ liệu để trả lời chắc chắn.',
         sources: Array.isArray(data.citations) ? data.citations.slice(0, 6) : [],
+        animateIn: true,
       });
       renderChat();
+      setThinkingState(false);
     } catch (error) {
       if (requestId !== chatRequestId || mode !== 'chat') return;
 
       chatMessages = chatMessages.filter((item) => !item.loading);
-      chatMessages.push({ role: 'assistant', content: error.message || 'Chat AI tạm thời không sẵn sàng.' });
+      chatMessages.push({
+        role: 'assistant',
+        content: error.message || 'Chat AI tạm thời không sẵn sàng.',
+        animateIn: true,
+      });
       renderChat();
+      setThinkingState(false);
     }
   };
 
@@ -568,14 +614,22 @@
     renderChat();
     if (chatInput) chatInput.value = '';
     resizeChatInput();
+    syncComposerState();
+    chatInput?.focus({ preventScroll: true });
     runChatQuery(seed, true);
   };
 
   const closeChat = () => {
     setMode('result');
+    if (chatSettleTimer) {
+      clearTimeout(chatSettleTimer);
+      chatSettleTimer = null;
+    }
+    chatShell?.classList.remove('is-thinking', 'is-settled');
     if (chatThread) chatThread.innerHTML = '';
     if (chatInput) chatInput.value = '';
     resizeChatInput();
+    syncComposerState();
     chatMessages = [];
   };
 
@@ -619,7 +673,12 @@
   });
 
   input?.addEventListener('input', onTyping);
-  chatInput?.addEventListener('input', resizeChatInput);
+  chatInput?.addEventListener('input', () => {
+    resizeChatInput();
+    syncComposerState();
+  });
+  chatInput?.addEventListener('focus', syncComposerState);
+  chatInput?.addEventListener('blur', syncComposerState);
   chatInput?.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -651,6 +710,7 @@
     if (!message) return;
     if (chatInput) chatInput.value = '';
     resizeChatInput();
+    syncComposerState();
     runChatQuery(message, false);
   });
 
@@ -659,6 +719,7 @@
   if (pivot) pivot.hidden = true;
   hideResultCards();
   resizeChatInput();
+  syncComposerState();
   loadFuseAndIndex();
 })();
 </script>
