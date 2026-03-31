@@ -6,141 +6,75 @@
 {{- if $fuseJS -}}
   {{- $fuseURL = $fuseJS.RelPermalink -}}
 {{- end -}}
-{{- $postsURL := "/posts/" | relURL -}}
-<section class="qx-ai-search" data-api-url="{{ $apiURL }}" data-posts-url="{{ $postsURL }}" data-index-url="{{ $indexURL }}" data-fuse-url="{{ $fuseURL }}">
-  <div class="qx-legacy-search-compat" hidden aria-hidden="true">
-    <div id="searchbox">
-      <input id="searchInput" type="search" autocomplete="off" tabindex="-1" />
-      <ul id="searchResults"></ul>
+<section class="qx-ai-search" data-api-url="{{ $apiURL }}" data-index-url="{{ $indexURL }}" data-fuse-url="{{ $fuseURL }}">
+  <header class="qx-search-head">
+    <p class="qx-search-kicker">Powerd by Gemini</p>
+    <div class="qx-search-brand-row">
+      <img class="qx-search-brand-logo" src="/images/brand/quorixAVT.jpg" alt="Quorix Viet Nam" />
+      <h1>Quorix AI</h1>
     </div>
-  </div>
-
-  <div class="qx-ai-orb qx-ai-orb-red" aria-hidden="true"></div>
-  <div class="qx-ai-orb qx-ai-orb-blue" aria-hidden="true"></div>
-
-  <header class="qx-ai-search-head">
-    <p class="qx-ai-search-kicker">AI SEARCH</p>
-    <h1>{{ .Title }}</h1>
-    <p class="qx-ai-search-lead">{{ .Description | default "Tìm theo ý định, có tóm tắt AI, trích dẫn nguồn và gợi ý hỏi tiếp theo." }}</p>
+    <p class="qx-search-lead">Tìm kiếm thông tin từ kho thông tin của Quorix và Internet</p>
   </header>
 
-  <form class="qx-ai-search-bar" id="qx-ai-search-form" autocomplete="off">
-    <label class="qx-ai-search-label" for="qx-ai-search-input">Câu hỏi</label>
-    <div class="qx-ai-search-inputrow">
-      <input id="qx-ai-search-input" class="qx-ai-search-input" type="search" maxlength="180" placeholder="{{ .Params.placeholder | default "Ví dụ: Tìm bài về internal/package trong Go" }}" aria-label="Hỏi Quorix" />
-      <button class="qx-ai-search-submit" type="submit">Tìm ngay</button>
+  <form id="qx-search-form" class="qx-search-bar" autocomplete="off">
+    <div class="qx-search-input-row">
+      <input
+        id="qx-search-input"
+        class="qx-search-input"
+        type="search"
+        maxlength="180"
+        placeholder="{{ .Params.placeholder | default "Ví dụ: OSPF, Golang internal package, AES-256" }}"
+        aria-label="Quorix AI search"
+      />
+      <button class="qx-search-submit" type="submit" aria-label="Tìm kiếm">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M10.8 3.2a7.6 7.6 0 1 1 0 15.2 7.6 7.6 0 0 1 0-15.2Zm0 2A5.6 5.6 0 1 0 10.8 16a5.6 5.6 0 0 0 0-10.8Zm8.55 12.73 2.95 2.95-1.42 1.42-2.95-2.95 1.42-1.42Z" />
+        </svg>
+      </button>
     </div>
-    <p class="qx-ai-search-hint">Mẹo: hỏi như đang nói chuyện. Ví dụ: "Tóm tắt bài về OSPF và cho tôi bài liên quan".</p>
   </form>
 
-  <div class="qx-ai-chiprow" aria-label="Gợi ý nhanh">
-    <button class="qx-ai-chip js-ai-query" type="button" data-query="Tìm các bài viết về Go internal package và architecture backend.">Go backend</button>
-    <button class="qx-ai-chip js-ai-query" type="button" data-query="Tóm tắt nhanh các bài về bảo mật và mạng.">Security</button>
-    <button class="qx-ai-chip js-ai-query" type="button" data-query="Bài nào nói về tổ chức thư mục hoặc cấu trúc dự án Go?">Go structure</button>
-    <button class="qx-ai-chip js-ai-query" type="button" data-query="Cho tôi bài gần đây nhất có liên quan đến networking.">Networking mới</button>
-  </div>
-
-  <div class="qx-ai-browse-shell" id="qx-ai-browse-shell">
-    <div class="qx-ai-grid">
-    <section class="qx-ai-panel qx-ai-answer-panel" aria-live="polite">
-      <div class="qx-ai-panel-head">
-        <div>
-          <p class="qx-ai-panel-kicker">Kết quả AI</p>
-          <h2>Tóm tắt và trích dẫn</h2>
-        </div>
-        <span class="qx-ai-status" id="qx-ai-status">Sẵn sàng</span>
-      </div>
-
-      <div class="qx-ai-notice" id="qx-ai-notice" hidden></div>
-
-      <div class="qx-fast-search" id="qx-fast-search" hidden>
-        <div class="qx-fast-search-head">
-          <div>
-            <p class="qx-ai-panel-kicker">Kết quả nhanh</p>
-            <h3>Tìm tức thì bằng Fuse.js</h3>
-          </div>
-          <span class="qx-fast-status" id="qx-fast-status">Đang chờ</span>
-        </div>
-        <div class="qx-fast-results" id="qx-fast-results"></div>
-        <p class="qx-fast-hint">Gõ để lọc ngay. Nhấn Enter để hỏi AI theo ngữ cảnh bài viết.</p>
-      </div>
-
-      <div class="qx-ai-empty" id="qx-ai-empty">
-        <h3>Hãy hỏi Quorix một điều gì đó</h3>
-        <p>Trang này sẽ trả lời ngắn gọn, chỉ ra nguồn liên quan và gợi ý câu hỏi tiếp theo.</p>
-      </div>
-
-      <div class="qx-ai-answer" id="qx-ai-answer" hidden>
-        <div class="qx-ai-overview">
-          <div class="qx-ai-overview-badge">AI Overview</div>
-          <p class="qx-ai-answer-copy" id="qx-ai-answer-copy"></p>
-          <div class="qx-ai-meta">
-            <span id="qx-ai-confidence"></span>
-            <span id="qx-ai-matches"></span>
-          </div>
-        </div>
-      </div>
-
-      <button class="qx-ai-loader" id="qx-ai-loader" type="button" hidden aria-live="polite" aria-busy="true" aria-label="Mở Quorix Chat">
-        <div class="qx-ai-loader-mark">
-          <img src="/images/brand/quorixAVT.jpg" alt="Quorix" />
-        </div>
-        <div class="qx-ai-loader-copy">
-          <strong>Quorix đang suy luận</strong>
-          <span>Đang đọc nguồn và tạo phần giải thích theo ngữ cảnh...</span>
-        </div>
-      </button>
-
-      <div class="qx-ai-sources" id="qx-ai-sources" hidden></div>
-      <div class="qx-ai-followups" id="qx-ai-followups" hidden></div>
-    </section>
-
-    <aside class="qx-ai-panel qx-ai-side-panel">
-      <div class="qx-ai-panel-head">
-        <div>
-          <p class="qx-ai-panel-kicker">Tối ưu</p>
-          <h2>Điều hướng nhanh</h2>
-        </div>
-      </div>
-
-      <div class="qx-ai-side-group">
-        <h3>Recent queries</h3>
-        <div class="qx-ai-recent" id="qx-ai-recent"></div>
-      </div>
-
-      <div class="qx-ai-side-group">
-        <h3>Nếu muốn browse</h3>
-        <a class="qx-ai-link" href="{{ $postsURL }}">Mở trang Posts</a>
-      </div>
-
-      <div class="qx-ai-side-group">
-        <h3>Cách hỏi tốt</h3>
-        <ul class="qx-ai-tips">
-          <li>Hỏi rõ chủ đề, mục tiêu hoặc bối cảnh.</li>
-          <li>Đòi tóm tắt, ví dụ hoặc so sánh nếu cần.</li>
-          <li>AI sẽ chỉ dùng bài viết và dự án trong site.</li>
-        </ul>
-      </div>
-    </aside>
-    </div>
-  </div>
-
-  <section class="qx-ai-chat-shell" id="qx-ai-chat-shell" hidden>
-    <div class="qx-ai-chat-topbar">
-      <button class="qx-ai-chat-back" id="qx-ai-chat-back" type="button">Trở về</button>
-      <div class="qx-ai-chat-head">
-        <p class="qx-ai-panel-kicker">Quorix Chat</p>
-        <h2 id="qx-ai-chat-context">Sẵn sàng trò chuyện</h2>
-      </div>
+  <div id="qx-browse-shell" class="qx-browse-shell">
+    <div class="qx-quick-chips" id="qx-quick-chips" aria-label="Từ khóa tìm nhanh">
+      <button class="qx-quick-chip" type="button" data-query="Go backend">Go backend</button>
+      <button class="qx-quick-chip" type="button" data-query="Security">Security</button>
+      <button class="qx-quick-chip" type="button" data-query="Go structure">Go structure</button>
+      <button class="qx-quick-chip" type="button" data-query="Networking mới">Networking mới</button>
     </div>
 
-    <div class="qx-ai-chat-thread" id="qx-ai-chat-thread" aria-live="polite"></div>
+    <div id="qx-fast-wrap" class="qx-fast-wrap" hidden>
+      <div id="qx-fast-results" class="qx-fast-results"></div>
+    </div>
 
-    <form class="qx-ai-chat-compose" id="qx-ai-chat-form" autocomplete="off">
-      <label class="qx-ai-chat-label" for="qx-ai-chat-input">Tin nhắn</label>
-      <div class="qx-ai-chat-compose-row">
-        <textarea id="qx-ai-chat-input" class="qx-ai-chat-input" rows="2" maxlength="900" placeholder="Nhập câu hỏi tiếp theo..."></textarea>
-        <button class="qx-ai-chat-send" type="submit">Gửi</button>
+    <button id="qx-ai-pivot" class="qx-ai-pivot is-loading" type="button" hidden disabled aria-label="Mở Quorix AI chat">
+      <span class="qx-ai-pivot-mark" aria-hidden="true">
+        <img src="/images/brand/quorixAVT.jpg" alt="" />
+      </span>
+      <span class="qx-ai-pivot-copy">
+        <strong id="qx-ai-pivot-title">Quorix đang suy luận</strong>
+        <span id="qx-ai-pivot-subtitle">Đang đọc nguồn và tạo phần giải thích theo ngữ cảnh...</span>
+      </span>
+    </button>
+
+    <article id="qx-ai-explainer" class="qx-ai-explainer" hidden>
+      <p id="qx-ai-explainer-text"></p>
+    </article>
+
+    <section id="qx-source-list" class="qx-source-list" hidden></section>
+  </div>
+
+  <section id="qx-chat-shell" class="qx-chat-shell" hidden>
+    <div class="qx-chat-top">
+      <button id="qx-chat-back" class="qx-chat-back" type="button" aria-label="Quay lại kết quả tìm kiếm">←</button>
+      <p id="qx-chat-context" class="qx-chat-context"></p>
+    </div>
+
+    <div id="qx-chat-thread" class="qx-chat-thread" aria-live="polite"></div>
+
+    <form id="qx-chat-form" class="qx-chat-form" autocomplete="off">
+      <div class="qx-chat-compose-row">
+        <textarea id="qx-chat-input" class="qx-chat-input" rows="2" maxlength="900" placeholder="Hỏi tiếp để đào sâu chủ đề..."></textarea>
+        <button class="qx-chat-send" type="submit">Gửi</button>
       </div>
     </form>
   </section>
@@ -152,215 +86,37 @@
   if (!root) return;
 
   const apiUrl = root.dataset.apiUrl;
-  const postsUrl = root.dataset.postsUrl;
   const indexUrl = root.dataset.indexUrl;
   const fuseUrl = root.dataset.fuseUrl;
-  const form = document.getElementById('qx-ai-search-form');
-  const input = document.getElementById('qx-ai-search-input');
-  const status = document.getElementById('qx-ai-status');
-  const notice = document.getElementById('qx-ai-notice');
-  const fastRoot = document.getElementById('qx-fast-search');
-  const fastStatus = document.getElementById('qx-fast-status');
+
+  const form = document.getElementById('qx-search-form');
+  const input = document.getElementById('qx-search-input');
+  const browseShell = document.getElementById('qx-browse-shell');
+  const chatShell = document.getElementById('qx-chat-shell');
+  const fastWrap = document.getElementById('qx-fast-wrap');
   const fastResults = document.getElementById('qx-fast-results');
-  const emptyState = document.getElementById('qx-ai-empty');
-  const answerWrap = document.getElementById('qx-ai-answer');
-  const loader = document.getElementById('qx-ai-loader');
-  const answerCopy = document.getElementById('qx-ai-answer-copy');
-  const confidence = document.getElementById('qx-ai-confidence');
-  const matches = document.getElementById('qx-ai-matches');
-  const sources = document.getElementById('qx-ai-sources');
-  const followups = document.getElementById('qx-ai-followups');
-  const browseShell = document.getElementById('qx-ai-browse-shell');
-  const chatShell = document.getElementById('qx-ai-chat-shell');
-  const chatBack = document.getElementById('qx-ai-chat-back');
-  const chatThread = document.getElementById('qx-ai-chat-thread');
-  const chatForm = document.getElementById('qx-ai-chat-form');
-  const chatInput = document.getElementById('qx-ai-chat-input');
-  const chatContext = document.getElementById('qx-ai-chat-context');
-  const recentWrap = document.getElementById('qx-ai-recent');
-  const queryButtons = Array.from(document.querySelectorAll('.js-ai-query'));
-  const recentKey = 'qx:ai-search-history:v1';
-  const defaultEmptyState = {
-    title: 'Hãy hỏi Quorix một điều gì đó',
-    body: 'Trang này sẽ trả lời ngắn gọn, chỉ ra nguồn liên quan và gợi ý câu hỏi tiếp theo.',
-    linkLabel: '',
-  };
+  const chipsWrap = document.getElementById('qx-quick-chips');
+  const pivot = document.getElementById('qx-ai-pivot');
+  const pivotTitle = document.getElementById('qx-ai-pivot-title');
+  const pivotSubtitle = document.getElementById('qx-ai-pivot-subtitle');
+  const explainer = document.getElementById('qx-ai-explainer');
+  const explainerText = document.getElementById('qx-ai-explainer-text');
+  const sourceList = document.getElementById('qx-source-list');
+
+  const chatBack = document.getElementById('qx-chat-back');
+  const chatContext = document.getElementById('qx-chat-context');
+  const chatThread = document.getElementById('qx-chat-thread');
+  const chatForm = document.getElementById('qx-chat-form');
+  const chatInput = document.getElementById('qx-chat-input');
+  const quickButtons = Array.from(document.querySelectorAll('.qx-quick-chip'));
+
   let fuseInstance = null;
   let quickItems = [];
-  let fastReady = false;
-  let fastLoadError = '';
-  let fastTimer = null;
-  let lastSubmittedQuery = '';
-  let activeMode = 'browse';
-  let browseRequestId = 0;
+  let mode = 'idle';
+  let lastQuery = '';
+  let searchRequestId = 0;
   let chatRequestId = 0;
   let chatMessages = [];
-
-  const loadRecent = () => {
-    try {
-      const raw = window.localStorage.getItem(recentKey);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.filter((item) => typeof item === 'string').slice(0, 5) : [];
-    } catch (error) {
-      return [];
-    }
-  };
-
-  const saveRecent = (query) => {
-    try {
-      const current = loadRecent().filter((item) => item !== query);
-      current.unshift(query);
-      window.localStorage.setItem(recentKey, JSON.stringify(current.slice(0, 5)));
-      renderRecent();
-    } catch (error) {
-      // Ignore storage failures.
-    }
-  };
-
-  const renderRecent = () => {
-    if (!recentWrap) return;
-    const recent = loadRecent();
-    recentWrap.innerHTML = '';
-
-    if (recent.length === 0) {
-      recentWrap.innerHTML = '<p class="qx-ai-muted">Chưa có lịch sử.</p>';
-      return;
-    }
-
-    recent.forEach((item) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'qx-ai-recent-chip';
-      button.textContent = item;
-      button.addEventListener('click', () => {
-        input.value = item;
-        input.focus();
-        void submitQuery(item);
-      });
-      recentWrap.appendChild(button);
-    });
-  };
-
-  const setLoading = (isLoading, label = 'Đang tìm...') => {
-    if (!status) return;
-    status.textContent = isLoading ? label : 'Sẵn sàng';
-    root.classList.toggle('is-loading', isLoading);
-  };
-
-  const setFastStatus = (label) => {
-    if (fastStatus) fastStatus.textContent = label;
-  };
-
-  const setAiLoading = (isLoading) => {
-    if (loader) loader.hidden = !isLoading;
-    if (answerWrap) answerWrap.classList.toggle('is-loading', isLoading);
-  };
-
-  const setViewMode = (mode) => {
-    activeMode = mode;
-    if (browseShell) browseShell.hidden = mode === 'chat';
-    if (chatShell) chatShell.hidden = mode !== 'chat';
-    if (input) input.disabled = mode === 'chat';
-  };
-
-  const renderChatThread = (messages) => {
-    if (!chatThread) return;
-    chatThread.innerHTML = '';
-
-    messages.forEach((message) => {
-      const row = document.createElement('article');
-      row.className = `qx-chat-msg qx-chat-msg-${message.role}${message.loading ? ' is-loading' : ''}`;
-
-      const bubble = document.createElement('div');
-      bubble.className = 'qx-chat-bubble';
-
-      if (message.loading) {
-        bubble.innerHTML = `
-          <span class="qx-chat-dots" aria-hidden="true">
-            <i></i><i></i><i></i>
-          </span>
-          <span class="qx-chat-loading-text">Quorix đang suy luận...</span>
-        `;
-      } else {
-        const content = document.createElement('p');
-        content.innerHTML = escapeText(message.content || '').replace(/\n/g, '<br>');
-        bubble.appendChild(content);
-      }
-
-      row.appendChild(bubble);
-
-      if (message.sources && message.sources.length) {
-        const sourcesWrap = document.createElement('div');
-        sourcesWrap.className = 'qx-chat-sources';
-        message.sources.forEach((source, index) => {
-          const sourceCard = document.createElement('article');
-          sourceCard.className = 'qx-chat-source';
-          sourceCard.innerHTML = `
-            <p class="qx-chat-source-kicker">Nguồn ${index + 1}</p>
-            <h3><a href="${source.url}" target="_self" rel="noopener">${source.title}</a></h3>
-            <p>${source.reason || ''}</p>
-          `;
-          sourcesWrap.appendChild(sourceCard);
-        });
-        row.appendChild(sourcesWrap);
-      }
-
-      if (message.followUps && message.followUps.length) {
-        const followWrap = document.createElement('div');
-        followWrap.className = 'qx-chat-followups';
-        message.followUps.forEach((item) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'qx-chat-followup-chip';
-          button.textContent = item;
-          button.addEventListener('click', () => {
-            if (chatInput) chatInput.value = item;
-            void submitChatQuery(item, false);
-          });
-          followWrap.appendChild(button);
-        });
-        row.appendChild(followWrap);
-      }
-
-      chatThread.appendChild(row);
-    });
-
-    chatThread.scrollTop = chatThread.scrollHeight;
-  };
-
-  const openChatMode = (query) => {
-    const cleaned = String(query || '').trim();
-    if (!cleaned) return;
-
-    setViewMode('chat');
-    setLoading(false);
-    setAiLoading(false);
-    renderNotice(null);
-    if (fastRoot) fastRoot.hidden = true;
-    if (emptyState) emptyState.hidden = true;
-    if (answerWrap) answerWrap.hidden = true;
-    if (sources) sources.hidden = true;
-    if (followups) followups.hidden = true;
-    if (chatContext) chatContext.textContent = cleaned;
-    chatMessages = [{ role: 'user', content: cleaned }];
-    renderChatThread([
-      { role: 'user', content: cleaned },
-      { role: 'assistant', loading: true, content: '' },
-    ]);
-    if (chatInput) chatInput.value = '';
-    if (chatInput) chatInput.focus();
-    void submitChatQuery(cleaned, true);
-  };
-
-  const exitChatMode = () => {
-    setViewMode('browse');
-    setLoading(false);
-    setAiLoading(false);
-    if (chatThread) chatThread.innerHTML = '';
-    chatMessages = [];
-    if (chatInput) chatInput.value = '';
-    if (chatContext) chatContext.textContent = 'Sẵn sàng trò chuyện';
-  };
 
   const normalizeText = (value) => String(value || '')
     .normalize('NFD')
@@ -388,263 +144,308 @@
     const source = String(text || '');
     const tokens = Array.from(new Set(tokenize(query).filter((token) => token.length > 1)));
     if (!tokens.length) return escapeText(source);
-
     const regex = new RegExp(`(${tokens.map(escapeRegExp).join('|')})`, 'ig');
-    return escapeText(source).replace(regex, '<mark class="qx-fast-highlight">$1</mark>');
+    return escapeText(source).replace(regex, '<mark>$1</mark>');
   };
 
-  const setEmptyState = ({ title, body, linkLabel } = defaultEmptyState) => {
-    if (!emptyState) return;
-    emptyState.hidden = false;
-    emptyState.textContent = '';
+  const setMode = (nextMode) => {
+    mode = nextMode;
+    const inChat = nextMode === 'chat';
+    if (browseShell) browseShell.hidden = inChat;
+    if (chatShell) chatShell.hidden = !inChat;
+    if (input) input.disabled = inChat;
+    if (chipsWrap) chipsWrap.hidden = inChat;
+  };
 
-    const heading = document.createElement('h3');
-    heading.textContent = title;
-    const paragraph = document.createElement('p');
-    paragraph.textContent = body;
-    emptyState.appendChild(heading);
-    emptyState.appendChild(paragraph);
+  const hideFast = () => {
+    if (fastWrap) fastWrap.hidden = true;
+    if (fastResults) fastResults.innerHTML = '';
+  };
 
-    if (linkLabel) {
-      const linkWrap = document.createElement('p');
-      const link = document.createElement('a');
-      link.className = 'qx-ai-link';
-      link.href = postsUrl;
-      link.textContent = linkLabel;
-      linkWrap.appendChild(link);
-      emptyState.appendChild(linkWrap);
+  const showPivotLoading = () => {
+    if (!pivot) return;
+    pivot.hidden = false;
+    pivot.disabled = true;
+    pivot.classList.add('is-loading');
+    pivot.classList.remove('is-ready');
+    if (pivotTitle) pivotTitle.textContent = 'Quorix đang suy luận';
+    if (pivotSubtitle) pivotSubtitle.textContent = 'Đang đọc nguồn và tạo phần giải thích theo ngữ cảnh...';
+  };
+
+  const showPivotReady = () => {
+    if (!pivot) return;
+    pivot.hidden = false;
+    pivot.disabled = false;
+    pivot.classList.remove('is-loading');
+    pivot.classList.add('is-ready');
+    if (pivotTitle) pivotTitle.textContent = 'Quorix AI';
+    if (pivotSubtitle) pivotSubtitle.textContent = 'Nhấn để tìm hiểu bằng AI';
+  };
+
+  const hideResultCards = () => {
+    if (explainer) explainer.hidden = true;
+    if (sourceList) {
+      sourceList.hidden = true;
+      sourceList.innerHTML = '';
     }
-  };
-
-  const resetViewToIdle = () => {
-    if (answerWrap) answerWrap.hidden = true;
-    setAiLoading(false);
-    if (sources) sources.hidden = true;
-    if (followups) followups.hidden = true;
-    renderNotice(null);
-    if (fastRoot) fastRoot.hidden = true;
-    setEmptyState(defaultEmptyState);
-  };
-
-  const renderNotice = (payload) => {
-    if (!notice) return;
-    if (!payload || !payload.message) {
-      notice.hidden = true;
-      notice.textContent = '';
-      notice.className = 'qx-ai-notice';
-      return;
-    }
-
-    notice.hidden = false;
-    notice.className = `qx-ai-notice qx-ai-notice-${String(payload.type || 'info')}`;
-    notice.textContent = '';
-    const title = document.createElement('strong');
-    title.textContent = payload.title || 'Thông báo';
-    const body = document.createElement('span');
-    body.textContent = payload.message;
-    notice.appendChild(title);
-    notice.appendChild(body);
   };
 
   const renderSources = (items) => {
-    if (!sources) return;
-    sources.innerHTML = '';
-    if (!items || items.length === 0) {
-      sources.hidden = true;
+    if (!sourceList) return;
+    sourceList.innerHTML = '';
+    const list = Array.isArray(items) ? items : [];
+    if (!list.length) {
+      sourceList.hidden = true;
       return;
     }
 
     const fragment = document.createDocumentFragment();
-    items.forEach((item, index) => {
+    list.forEach((item, index) => {
       const card = document.createElement('article');
-      card.className = 'qx-ai-source-card';
+      card.className = 'qx-source-card';
       card.innerHTML = `
-        <p class="qx-ai-source-kicker">Nguồn ${index + 1}</p>
-        <h3><a href="${item.url}" target="_self" rel="noopener">${item.title}</a></h3>
-        <p>${item.reason || ''}</p>
-        <p class="qx-ai-source-excerpt">${item.excerpt || ''}</p>
+        <p class="qx-source-kicker">Nguồn ${index + 1}</p>
+        <h3><a href="${escapeText(item.url || '#')}" target="_self" rel="noopener">${escapeText(item.title || 'Nguồn liên quan')}</a></h3>
+        <p>${escapeText(item.reason || '')}</p>
       `;
       fragment.appendChild(card);
     });
-    sources.appendChild(fragment);
-    sources.hidden = false;
-  };
 
-  const renderFollowups = (items) => {
-    if (!followups) return;
-    followups.innerHTML = '';
-    if (!items || items.length === 0) {
-      followups.hidden = true;
-      return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    items.forEach((item) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'qx-ai-followup-chip';
-      button.textContent = item;
-      button.addEventListener('click', () => {
-        input.value = item;
-        input.focus();
-        void submitQuery(item);
-      });
-      fragment.appendChild(button);
-    });
-    followups.appendChild(fragment);
-    followups.hidden = false;
-  };
-
-  const buildExcerpt = (item, query) => {
-    const source = String(item.summary || item.description || item.content || '').replace(/\s+/g, ' ').trim();
-    if (!source) return '';
-
-    const lower = normalizeText(source);
-    const tokens = tokenize(query);
-    const hit = tokens.find((token) => token.length > 1 && lower.includes(token));
-    if (!hit) return source.slice(0, 140);
-
-    const index = lower.indexOf(hit);
-    const start = Math.max(0, index - 50);
-    const end = Math.min(source.length, index + 120);
-    const excerpt = source.slice(start, end).trim();
-    return start > 0 ? `...${excerpt}` : excerpt;
-  };
-
-  const scoreItem = (item, queryTokens) => {
-    const title = normalizeText(item.title);
-    const summary = normalizeText(item.summary);
-    const content = normalizeText(item.content);
-    const tags = Array.isArray(item.tags) ? item.tags.map((tag) => normalizeText(tag)) : [];
-    let score = 0;
-
-    queryTokens.forEach((token) => {
-      if (title.includes(token)) score += 6;
-      if (summary.includes(token)) score += 3;
-      if (content.includes(token)) score += 1;
-      if (tags.some((tag) => tag.includes(token))) score += 4;
-    });
-
-    const phrase = normalizeText(queryTokens.join(' '));
-    if (phrase && title.includes(phrase)) score += 10;
-    if (phrase && summary.includes(phrase)) score += 5;
-
-    return score;
-  };
-
-  const fallbackQuickSearch = (query, limit = 5) => {
-    const queryTokens = tokenize(query);
-    if (!queryTokens.length) return [];
-
-    return quickItems
-      .map((item) => ({
-        ...item,
-        _score: scoreItem(item, queryTokens),
-      }))
-      .filter((item) => item._score > 0)
-      .sort((a, b) => b._score - a._score)
-      .slice(0, limit);
+    sourceList.appendChild(fragment);
+    sourceList.hidden = false;
   };
 
   const renderFastResults = (query) => {
-    if (!fastRoot || !fastResults) return;
+    if (!fastWrap || !fastResults) return;
 
     const cleaned = String(query || '').trim();
     if (cleaned.length < 2) {
-      fastRoot.hidden = true;
-      fastResults.innerHTML = '';
-      setFastStatus(fastLoadError ? 'Fuse.js lỗi' : 'Đang chờ');
+      hideFast();
       return;
     }
 
-    fastRoot.hidden = false;
+    const results = fuseInstance
+      ? fuseInstance.search(cleaned, { limit: 8 }).map((result) => result.item)
+      : [];
+
+    fastWrap.hidden = false;
     fastResults.innerHTML = '';
 
-    if (!quickItems.length) {
-      fastResults.innerHTML = '<p class="qx-ai-muted">Đang tải chỉ mục nội dung...</p>';
-      setFastStatus('Đang tải');
-      return;
-    }
-
-    const items = fuseInstance
-      ? fuseInstance.search(cleaned, { limit: 5 }).map((result) => ({ ...result.item, _score: result.score ?? 0 }))
-      : fallbackQuickSearch(cleaned, 5);
-
-    if (items.length === 0) {
-      fastResults.innerHTML = `<p class="qx-ai-muted">Không có kết quả nhanh cho “${escapeText(cleaned)}”. Nhấn Enter để hỏi AI.</p>`;
-      setFastStatus('0 kết quả nhanh');
+    if (!results.length) {
+      fastResults.innerHTML = '<p class="qx-empty-fast">Không có kết quả phù hợp.</p>';
       return;
     }
 
     const fragment = document.createDocumentFragment();
-    items.forEach((item, index) => {
+    results.forEach((item) => {
       const card = document.createElement('article');
       card.className = 'qx-fast-card';
-      const tags = Array.isArray(item.tags) && item.tags.length ? item.tags.slice(0, 2).join(' · ') : (item.section || 'Bài viết');
-      const safeUrl = escapeText(item.url || '#');
-      const excerpt = buildExcerpt(item, cleaned);
       card.innerHTML = `
-        <p class="qx-fast-card-kicker">Kết quả ${index + 1}</p>
-        <h4><a href="${safeUrl}">${highlightHtml(item.title || '', cleaned)}</a></h4>
-        <p class="qx-fast-card-excerpt">${highlightHtml(excerpt, cleaned)}</p>
-        <div class="qx-fast-card-meta">
-          <span>${escapeText(tags)}</span>
-          <span>${item.readingTime ? `${item.readingTime} phút` : 'Đọc nhanh'}</span>
-        </div>
+        <h3><a href="${escapeText(item.url || '#')}">${highlightHtml(item.title || '', cleaned)}</a></h3>
+        <p>${highlightHtml(String(item.summary || item.description || ''), cleaned)}</p>
       `;
       fragment.appendChild(card);
     });
 
     fastResults.appendChild(fragment);
-    setFastStatus(`${items.length} kết quả nhanh`);
   };
 
-  const scheduleFastSearch = () => {
+  const onTyping = () => {
+    if (mode === 'chat') return;
     const query = input ? input.value.trim() : '';
-    if (fastTimer) window.clearTimeout(fastTimer);
-    fastTimer = window.setTimeout(() => {
-      if (!query) {
-        resetViewToIdle();
-        return;
-      }
+    if (mode === 'searching' || mode === 'result') {
+      searchRequestId += 1;
+    }
 
-      if (answerWrap) answerWrap.hidden = true;
-      if (loader) loader.hidden = true;
-      if (sources) sources.hidden = true;
-      if (followups) followups.hidden = true;
-      renderNotice(null);
-      if (emptyState) emptyState.hidden = true;
-      renderFastResults(query);
-      if (fastRoot) fastRoot.hidden = false;
-    }, 120);
-  };
-
-  const loadFuseAndIndex = async () => {
-    if (!fuseUrl || !indexUrl) {
-      fastLoadError = 'Thiếu nguồn dữ liệu tìm kiếm.';
-      setFastStatus('Thiếu dữ liệu');
+    if (!query) {
+      mode = 'idle';
+      hideFast();
+      if (pivot) pivot.hidden = true;
+      hideResultCards();
       return;
     }
 
-    try {
-      setFastStatus('Đang tải');
+    mode = 'typing';
+    if (pivot) pivot.hidden = true;
+    hideResultCards();
+    renderFastResults(query);
+  };
 
+  const runSearch = async (query) => {
+    const cleaned = String(query || '').trim();
+    if (!cleaned) return;
+
+    const requestId = ++searchRequestId;
+    mode = 'searching';
+    lastQuery = cleaned;
+    hideFast();
+    hideResultCards();
+    showPivotLoading();
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: cleaned, mode: 'search', topK: 6 }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error((data && data.error) || 'Không thể tìm kiếm lúc này.');
+      }
+
+      if (requestId !== searchRequestId || mode === 'chat') return;
+
+      mode = 'result';
+      showPivotReady();
+      if (explainer && explainerText) {
+        explainer.hidden = false;
+        explainerText.textContent = data.answer || 'Mình chưa đủ dữ liệu để kết luận chắc chắn.';
+      }
+      renderSources(Array.isArray(data.citations) ? data.citations : []);
+    } catch (error) {
+      if (requestId !== searchRequestId || mode === 'chat') return;
+      mode = 'result';
+      showPivotReady();
+      if (explainer && explainerText) {
+        explainer.hidden = false;
+        explainerText.textContent = error.message || 'Không thể tìm kiếm lúc này.';
+      }
+      renderSources([]);
+    }
+  };
+
+  const renderChat = () => {
+    if (!chatThread) return;
+    chatThread.innerHTML = '';
+
+    chatMessages.forEach((message) => {
+      const item = document.createElement('article');
+      item.className = `qx-chat-msg ${message.role === 'user' ? 'is-user' : 'is-ai'}${message.loading ? ' is-loading' : ''}`;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'qx-chat-bubble';
+
+      if (message.loading) {
+        bubble.innerHTML = `
+          <span class="qx-chat-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>Quorix đang suy luận...</span>
+        `;
+      } else {
+        bubble.innerHTML = `<p>${escapeText(message.content || '').replace(/\n/g, '<br>')}</p>`;
+      }
+
+      item.appendChild(bubble);
+
+      if (Array.isArray(message.sources) && message.sources.length) {
+        const sourceWrap = document.createElement('div');
+        sourceWrap.className = 'qx-chat-sources';
+        message.sources.forEach((source, index) => {
+          const sourceCard = document.createElement('article');
+          sourceCard.className = 'qx-chat-source-card';
+          sourceCard.innerHTML = `
+            <p class="qx-source-kicker">Nguồn ${index + 1}</p>
+            <h3><a href="${escapeText(source.url || '#')}" target="_blank" rel="noopener noreferrer">${escapeText(source.title || source.url || 'Nguồn web')}</a></h3>
+          `;
+          sourceWrap.appendChild(sourceCard);
+        });
+        item.appendChild(sourceWrap);
+      }
+
+      chatThread.appendChild(item);
+    });
+
+    chatThread.scrollTop = chatThread.scrollHeight;
+  };
+
+  const runChatQuery = async (message, isInitial = false) => {
+    const cleaned = String(message || '').trim();
+    if (!cleaned) return;
+
+    const requestId = ++chatRequestId;
+
+    if (!isInitial) {
+      chatMessages.push({ role: 'user', content: cleaned });
+    }
+
+    chatMessages.push({ role: 'assistant', loading: true, content: '' });
+    renderChat();
+
+    const history = chatMessages
+      .filter((item) => !item.loading)
+      .map((item) => ({ role: item.role === 'assistant' ? 'assistant' : 'user', content: item.content }));
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'chat',
+          query: cleaned,
+          topK: 5,
+          messages: history,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error((data && data.error) || 'Không thể truy cập chat AI lúc này.');
+      }
+
+      if (requestId !== chatRequestId || mode !== 'chat') return;
+
+      chatMessages = chatMessages.filter((item) => !item.loading);
+      chatMessages.push({
+        role: 'assistant',
+        content: data.answer || 'Mình chưa có đủ dữ liệu để trả lời chắc chắn.',
+        sources: Array.isArray(data.citations) ? data.citations.slice(0, 6) : [],
+      });
+      renderChat();
+    } catch (error) {
+      if (requestId !== chatRequestId || mode !== 'chat') return;
+
+      chatMessages = chatMessages.filter((item) => !item.loading);
+      chatMessages.push({ role: 'assistant', content: error.message || 'Chat AI tạm thời không sẵn sàng.' });
+      renderChat();
+    }
+  };
+
+  const openChat = () => {
+    const seed = (input ? input.value.trim() : '') || lastQuery;
+    if (!seed) return;
+
+    setMode('chat');
+    if (chatContext) chatContext.textContent = seed;
+    chatMessages = [{ role: 'user', content: seed }];
+    renderChat();
+    if (chatInput) chatInput.value = '';
+    runChatQuery(seed, true);
+  };
+
+  const closeChat = () => {
+    setMode('result');
+    if (chatThread) chatThread.innerHTML = '';
+    if (chatInput) chatInput.value = '';
+    chatMessages = [];
+  };
+
+  const loadFuseAndIndex = async () => {
+    if (!fuseUrl || !indexUrl) return;
+
+    try {
       if (!window.Fuse) {
         await new Promise((resolve, reject) => {
           const script = document.createElement('script');
           script.src = fuseUrl;
           script.async = true;
-          script.onload = () => resolve();
-          script.onerror = () => reject(new Error('Không tải được Fuse.js.'));
+          script.onload = resolve;
+          script.onerror = () => reject(new Error('Không tải được Fuse.js'));
           document.head.appendChild(script);
         });
       }
 
       const response = await fetch(indexUrl, { headers: { accept: 'application/json' } });
-      if (!response.ok) {
-        throw new Error('Không tải được index.json.');
-      }
-
+      if (!response.ok) return;
       const payload = await response.json();
       quickItems = Array.isArray(payload) ? payload : Array.isArray(payload.items) ? payload.items : [];
       fuseInstance = new window.Fuse(quickItems, {
@@ -652,222 +453,54 @@
         threshold: 0.35,
         ignoreLocation: true,
         shouldSort: true,
-        includeScore: true,
+        includeScore: false,
         minMatchCharLength: 2,
-        distance: 100,
       });
-
-      fastReady = true;
-      setFastStatus('Sẵn sàng');
-      scheduleFastSearch();
     } catch (error) {
-      fastLoadError = error.message || 'Không tải được Fuse.js.';
-      fastReady = false;
-      setFastStatus('Lỗi tải');
-      if (fastRoot) fastRoot.hidden = true;
+      // Keep UI usable even if Fuse fails to load.
     }
   };
 
-  const renderAnswer = (payload, query) => {
-    if (activeMode !== 'browse') return;
-    if (emptyState) emptyState.hidden = true;
-    if (answerWrap) answerWrap.hidden = false;
-    setAiLoading(false);
-    renderNotice(payload.notice || null);
-    lastSubmittedQuery = String(query || '').trim();
-    if (fastRoot) fastRoot.hidden = true;
-
-    if (answerCopy) answerCopy.textContent = payload.answer || 'Mình chưa đủ dữ liệu để trả lời chắc chắn.';
-    if (confidence) confidence.textContent = `Độ chắc: ${String(payload.confidence || 'medium').toUpperCase()}`;
-    if (matches) matches.textContent = payload.matchedCount ? `${payload.matchedCount} nguồn liên quan` : 'Không có nguồn đủ chắc';
-
-    const items = Array.isArray(payload.citations) ? payload.citations : [];
-    renderSources(items);
-    renderFollowups(Array.isArray(payload.followUps) ? payload.followUps : []);
-
-    saveRecent(query);
-  };
-
-  const submitQuery = async (query) => {
-    const cleaned = String(query || '').trim();
-    if (!cleaned) return;
-    const requestId = ++browseRequestId;
-
-    setLoading(true, 'Đang suy luận...');
-    if (emptyState) emptyState.hidden = true;
-    if (answerWrap) answerWrap.hidden = true;
-    if (sources) sources.hidden = true;
-    if (followups) followups.hidden = true;
-    setAiLoading(true);
-    renderNotice(null);
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: cleaned, topK: 5 }),
-      });
-
-      const data = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error((data && data.error) || 'AI Search đang tạm lỗi.');
-      }
-
-      if (requestId !== browseRequestId || activeMode !== 'browse') {
-        return;
-      }
-
-      renderAnswer(data || {}, cleaned);
-      setLoading(false, data && data.confidence ? `Đã xong · ${String(data.confidence).toUpperCase()}` : 'Đã xong');
-    } catch (error) {
-      if (requestId !== browseRequestId || activeMode !== 'browse') {
-        return;
-      }
-      setLoading(false, 'Lỗi tạm thời');
-      setAiLoading(false);
-      renderNotice({
-        type: 'error',
-        title: 'AI Search chưa sẵn sàng',
-        message: error.message || 'Không thể kết nối tới AI Search.',
-      });
-      if (emptyState) {
-        setEmptyState({
-          title: 'AI Search chưa sẵn sàng',
-          body: error.message || 'Không thể kết nối tới AI Search.',
-          linkLabel: 'Quay lại Posts',
-        });
-      }
-    }
-  };
-
-  const submitChatQuery = async (query, isInitial = false) => {
-    const cleaned = String(query || '').trim();
-    if (!cleaned) return;
-    const requestId = ++chatRequestId;
-
-    setViewMode('chat');
-    setLoading(true, 'Đang suy luận...');
-    setAiLoading(true);
-    renderNotice(null);
-
-    if (!isInitial) {
-      chatMessages.push({ role: 'user', content: cleaned });
-    }
-
-    renderChatThread([
-      ...chatMessages,
-      { role: 'assistant', loading: true, content: '' },
-    ]);
-
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: cleaned,
-          mode: 'chat',
-          topK: 5,
-          messages: chatMessages,
-        }),
-      });
-
-      const data = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error((data && data.error) || 'AI Chat đang tạm lỗi.');
-      }
-
-      if (requestId !== chatRequestId || activeMode !== 'chat') {
-        return;
-      }
-
-      chatMessages.push({
-        role: 'assistant',
-        content: data.answer || 'Mình chưa đủ dữ liệu để trả lời chắc chắn.',
-        sources: Array.isArray(data.citations)
-          ? data.citations.slice(0, 5).map((item) => ({
-            title: item.title,
-            url: item.url,
-            reason: item.reason,
-          }))
-          : [],
-        followUps: Array.isArray(data.followUps) ? data.followUps.slice(0, 5) : [],
-      });
-
-      renderChatThread(chatMessages);
-      setLoading(false, data && data.confidence ? `Đã xong · ${String(data.confidence).toUpperCase()}` : 'Đã xong');
-      setAiLoading(false);
-    } catch (error) {
-      if (requestId !== chatRequestId || activeMode !== 'chat') {
-        return;
-      }
-
-      chatMessages.push({
-        role: 'assistant',
-        content: error.message || 'AI Chat đang tạm lỗi.',
-      });
-      renderChatThread(chatMessages);
-      setLoading(false, 'Lỗi tạm thời');
-      setAiLoading(false);
-      renderNotice({
-        type: 'error',
-        title: 'AI Chat chưa sẵn sàng',
-        message: error.message || 'Không thể kết nối tới AI Chat.',
-      });
-    }
-  };
-
-  form.addEventListener('submit', (event) => {
+  form?.addEventListener('submit', (event) => {
     event.preventDefault();
-    const query = input.value.trim();
+    const query = input ? input.value.trim() : '';
     if (!query) return;
-    void submitQuery(query);
+    runSearch(query);
   });
 
-  queryButtons.forEach((button) => {
+  input?.addEventListener('input', onTyping);
+
+  quickButtons.forEach((button) => {
     button.addEventListener('click', () => {
       const query = button.dataset.query || button.textContent || '';
-      input.value = query;
-      input.focus();
-      void submitQuery(query);
+      if (input) {
+        input.value = query;
+        input.focus();
+      }
+      onTyping();
     });
   });
 
-  if (loader) {
-    loader.addEventListener('click', () => {
-      const query = input.value.trim() || lastSubmittedQuery;
-      openChatMode(query);
-    });
-    loader.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        const query = input.value.trim() || lastSubmittedQuery;
-        openChatMode(query);
-      }
-    });
-  }
+  pivot?.addEventListener('click', () => {
+    if (mode === 'searching') return;
+    openChat();
+  });
 
-  if (chatBack) {
-    chatBack.addEventListener('click', exitChatMode);
-  }
+  chatBack?.addEventListener('click', closeChat);
 
-  if (chatForm) {
-    chatForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const message = chatInput ? chatInput.value.trim() : '';
-      if (!message) return;
-      if (chatInput) chatInput.value = '';
-      void submitChatQuery(message, false);
-    });
-  }
+  chatForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const message = chatInput ? chatInput.value.trim() : '';
+    if (!message) return;
+    if (chatInput) chatInput.value = '';
+    runChatQuery(message, false);
+  });
 
-  renderRecent();
-  resetViewToIdle();
-  if (input) {
-    input.addEventListener('input', () => {
-      scheduleFastSearch();
-    });
-  }
-  void loadFuseAndIndex();
+  setMode('idle');
+  hideFast();
+  if (pivot) pivot.hidden = true;
+  hideResultCards();
+  loadFuseAndIndex();
 })();
 </script>
 {{ end }}

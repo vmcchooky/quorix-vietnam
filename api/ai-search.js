@@ -130,6 +130,41 @@ function buildContextItems(items, queryTokens, topK) {
     }));
 }
 
+function parseGeminiJson(payload, fallbackMessage) {
+  const text = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '{}';
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    const match = text.match(/\{[\s\S]*\}/);
+    parsed = match ? JSON.parse(match[0]) : null;
+  }
+
+  if (!parsed || typeof parsed !== 'object') {
+    const err = new Error(fallbackMessage);
+    err.statusCode = 502;
+    throw err;
+  }
+
+  return parsed;
+}
+
+function extractGroundingSources(payload) {
+  const chunks = payload?.candidates?.[0]?.groundingMetadata?.groundingChunks;
+  if (!Array.isArray(chunks)) return [];
+
+  const seen = new Set();
+  const sources = [];
+  chunks.forEach((chunk) => {
+    const uri = chunk?.web?.uri;
+    const title = chunk?.web?.title || uri;
+    if (!uri || seen.has(uri)) return;
+    seen.add(uri);
+    sources.push({ title, url: uri });
+  });
+  return sources;
+}
+
 async function callGemini({ query, candidates }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -144,7 +179,7 @@ async function callGemini({ query, candidates }) {
   const prompt = [
     'Bạn là trợ lý tìm kiếm nội dung của Quorix Viet Nam.',
     'Chỉ dùng các nguồn được cung cấp bên dưới. Không bịa link, không tạo nguồn mới.',
-    'Trả lời ngắn gọn, rõ ràng, bằng tiếng Việt.',
+    'Trả lời rõ ràng, có chiều sâu vừa đủ (4-8 câu), bằng tiếng Việt.',
     'Nếu không đủ dữ liệu, hãy nói rõ là chưa đủ chắc chắn.',
     'Đầu ra PHẢI là JSON hợp lệ với các trường:',
     '{ "answer": string, "confidence": "high"|"medium"|"low", "matchedIds": number[], "followUps": string[] }',
@@ -180,8 +215,8 @@ async function callGemini({ query, candidates }) {
       ],
       generationConfig: {
         responseMimeType: 'application/json',
-        temperature: 0.35,
-        maxOutputTokens: 800,
+        temperature: 0.42,
+        maxOutputTokens: 1100,
       },
     }),
   });
@@ -194,22 +229,7 @@ async function callGemini({ query, candidates }) {
     throw error;
   }
 
-  const text = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '{}';
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
-    const match = text.match(/\{[\s\S]*\}/);
-    parsed = match ? JSON.parse(match[0]) : null;
-  }
-
-  if (!parsed || typeof parsed !== 'object') {
-    const error = new Error('Gemini không trả về JSON hợp lệ.');
-    error.statusCode = 502;
-    throw error;
-  }
-
-  return parsed;
+  return parseGeminiJson(payload, 'Gemini không trả về JSON hợp lệ.');
 }
 
 async function callGeminiChat({ query, candidates, messages }) {
@@ -222,38 +242,49 @@ async function callGeminiChat({ query, candidates, messages }) {
 
   const model = process.env.GEMINI_CHAT_MODEL || 'gemini-3-flash-preview';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-  const history = Array.isArray(messages)
-    ? messages.slice(-8).map((message) => {
-      const roleLabel = message.role === 'assistant' ? 'Trợ lý' : 'Người dùng';
-      const content = String(message.content || '').trim();
-      return content ? `${roleLabel}: ${content}` : '';
-    }).filter(Boolean).join('\n')
-    : '';
+  const history = Array.isArray(messages) ? messages.slice(-8) : [];
+  const internalContext = candidates.map((item) => [
+    `ID: ${item.id}`,
+    `Title: ${item.title}`,
+    `URL: ${item.url}`,
+    `Section: ${item.section}`,
+    `Tags: ${(item.tags || []).join(', ')}`,
+    `Summary: ${item.summary}`,
+    `Excerpt: ${item.excerpt}`,
+  ].join('\n')).join('\n\n');
 
-  const prompt = [
-    'Bạn là Quorix Chat, trợ lý đọc và học theo ngữ cảnh.',
-    'Hãy trả lời bằng tiếng Việt tự nhiên, rõ ràng, hữu ích và dễ hiểu.',
-    'Bạn có thể trả lời kiến thức bên ngoài site nếu cần, nhưng nếu có nguồn nội bộ liên quan thì hãy ưu tiên nhắc tới.',
-    'Nếu dùng nguồn nội bộ, chỉ dùng các nguồn được cung cấp bên dưới. Không bịa link.',
-    'Đầu ra PHẢI là JSON hợp lệ với các trường:',
+  const systemInstruction = [
+    'Bạn là Quorix AI Chat.',
+    'Nhiệm vụ: trả lời câu hỏi một cách rõ ràng, dễ học, và có cấu trúc.',
+    'Bạn được phép truy cập Internet live bằng Google Search grounding để bổ sung thông tin mới nhất.',
+    'Nếu dùng nguồn nội bộ Quorix thì ưu tiên liên kết lại nguồn đó khi phù hợp.',
+    'Bắt buộc trả về JSON hợp lệ với schema:',
     '{ "answer": string, "confidence": "high"|"medium"|"low", "matchedIds": number[], "followUps": string[] }',
-    'matchedIds chỉ được chọn từ ID của các nguồn đã cung cấp.',
-    '',
-    `Tin nhắn hiện tại của người dùng: ${query}`,
-    history ? `Lịch sử hội thoại:\n${history}` : 'Lịch sử hội thoại: (trống)',
-    '',
-    'Nguồn nội bộ có thể tham chiếu:',
-    ...candidates.map((item) => [
-      `ID: ${item.id}`,
-      `Title: ${item.title}`,
-      `URL: ${item.url}`,
-      `Section: ${item.section}`,
-      `Tags: ${(item.tags || []).join(', ')}`,
-      `Summary: ${item.summary}`,
-      `Excerpt: ${item.excerpt}`,
-      '',
-    ].join('\n')),
+    'matchedIds chỉ được lấy từ các ID nội bộ nếu có dùng chúng.',
   ].join('\n');
+
+  const contents = [];
+  history.forEach((message) => {
+    const text = String(message?.content || '').trim();
+    if (!text) return;
+    contents.push({
+      role: message.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text }],
+    });
+  });
+
+  contents.push({
+    role: 'user',
+    parts: [{
+      text: [
+        `Câu hỏi hiện tại: ${query}`,
+        '',
+        internalContext
+          ? `Nguồn nội bộ Quorix (tham khảo nếu phù hợp):\n${internalContext}`
+          : 'Nguồn nội bộ Quorix: không có dữ liệu phù hợp trực tiếp.',
+      ].join('\n'),
+    }],
+  });
 
   const response = await fetch(url, {
     method: 'POST',
@@ -262,16 +293,15 @@ async function callGeminiChat({ query, candidates, messages }) {
       'x-goog-api-key': apiKey,
     },
     body: JSON.stringify({
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: prompt }],
-        },
-      ],
+      systemInstruction: {
+        parts: [{ text: systemInstruction }],
+      },
+      contents,
+      tools: [{ google_search: {} }],
       generationConfig: {
         responseMimeType: 'application/json',
-        temperature: 0.45,
-        maxOutputTokens: 1100,
+        temperature: 0.55,
+        maxOutputTokens: 1500,
       },
     }),
   });
@@ -284,20 +314,8 @@ async function callGeminiChat({ query, candidates, messages }) {
     throw error;
   }
 
-  const text = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('') || '{}';
-  let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
-    const match = text.match(/\{[\s\S]*\}/);
-    parsed = match ? JSON.parse(match[0]) : null;
-  }
-
-  if (!parsed || typeof parsed !== 'object') {
-    const error = new Error('Gemini Chat không trả về JSON hợp lệ.');
-    error.statusCode = 502;
-    throw error;
-  }
+  const parsed = parseGeminiJson(payload, 'Gemini Chat không trả về JSON hợp lệ.');
+  parsed.webSources = extractGroundingSources(payload);
 
   return parsed;
 }
@@ -450,6 +468,24 @@ module.exports = async (req, res) => {
         readingTime: item.readingTime,
         date: item.date,
       })));
+    }
+
+    if (mode === 'chat' && Array.isArray(aiResult.webSources) && aiResult.webSources.length) {
+      const known = new Set(citations.map((item) => item.url));
+      aiResult.webSources.forEach((source) => {
+        if (!source?.url || known.has(source.url)) return;
+        known.add(source.url);
+        citations.unshift({
+          title: source.title || source.url,
+          url: source.url,
+          reason: 'Nguồn Internet live từ Gemini grounding',
+          excerpt: '',
+          section: 'Web',
+          tags: [],
+          readingTime: null,
+          date: null,
+        });
+      });
     }
 
     res.setHeader('Cache-Control', 'no-store');
