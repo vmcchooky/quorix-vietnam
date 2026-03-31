@@ -203,6 +203,16 @@ function getProviderModel(provider, mode) {
   return '';
 }
 
+function getPositiveIntEnv(keys, fallback, min = 128, max = 8192) {
+  for (const key of keys) {
+    const value = Number.parseInt(process.env[key], 10);
+    if (Number.isInteger(value) && value >= min && value <= max) {
+      return value;
+    }
+  }
+  return fallback;
+}
+
 function parseJsonObjectFromText(text, fallbackMessage) {
   const raw = String(text || '').trim();
   if (!raw) {
@@ -289,6 +299,20 @@ function buildChatSystemInstruction() {
   ].join('\n');
 }
 
+function trimDuplicateLatestUserMessage(messages, query) {
+  const history = Array.isArray(messages) ? messages.slice(-10) : [];
+  if (!history.length) return history;
+
+  const last = history[history.length - 1];
+  if (last?.role !== 'user') return history;
+
+  const lastContent = normalizeText(last?.content || '');
+  const queryContent = normalizeText(query || '');
+  if (!lastContent || !queryContent || lastContent !== queryContent) return history;
+
+  return history.slice(0, -1);
+}
+
 function normalizeTextCompletion(payload, fallbackMessage) {
   const answer = String(payload || '').trim();
   if (answer) return answer;
@@ -305,6 +329,7 @@ function extractGroqText(payload, fallbackMessage) {
 async function callGeminiSearch({ query, candidates, apiKey, model }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const prompt = buildSearchPrompt(query, candidates);
+  const maxOutputTokens = getPositiveIntEnv(['GEMINI_SEARCH_MAX_OUTPUT_TOKENS', 'GEMINI_MAX_OUTPUT_TOKENS'], 1200, 256, 4096);
 
   const response = await fetch(url, {
     method: 'POST',
@@ -322,7 +347,7 @@ async function callGeminiSearch({ query, candidates, apiKey, model }) {
       generationConfig: {
         responseMimeType: 'application/json',
         temperature: 0.42,
-        maxOutputTokens: 1100,
+        maxOutputTokens,
       },
     }),
   });
@@ -340,7 +365,8 @@ async function callGeminiSearch({ query, candidates, apiKey, model }) {
 
 async function callGeminiChat({ query, messages, apiKey, model }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-  const history = Array.isArray(messages) ? messages.slice(-10) : [];
+  const history = trimDuplicateLatestUserMessage(messages, query);
+  const maxOutputTokens = getPositiveIntEnv(['GEMINI_CHAT_MAX_OUTPUT_TOKENS', 'GEMINI_MAX_OUTPUT_TOKENS'], 2200, 256, 8192);
 
   const contents = [];
   history.forEach((message) => {
@@ -371,7 +397,7 @@ async function callGeminiChat({ query, messages, apiKey, model }) {
       tools: [{ google_search: {} }],
       generationConfig: {
         temperature: 0.55,
-        maxOutputTokens: 1500,
+        maxOutputTokens,
       },
     }),
   });
@@ -402,6 +428,7 @@ async function callGeminiChat({ query, messages, apiKey, model }) {
 
 async function callGroqSearch({ query, candidates, apiKey, model }) {
   const prompt = buildSearchPrompt(query, candidates);
+  const maxTokens = getPositiveIntEnv(['GROQ_SEARCH_MAX_TOKENS', 'GROQ_MAX_TOKENS'], 1200, 256, 8192);
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -421,7 +448,7 @@ async function callGroqSearch({ query, candidates, apiKey, model }) {
         },
       ],
       temperature: 0.35,
-      max_tokens: 1100,
+      max_tokens: maxTokens,
     }),
   });
 
@@ -438,7 +465,8 @@ async function callGroqSearch({ query, candidates, apiKey, model }) {
 }
 
 async function callGroqChat({ query, messages, apiKey, model }) {
-  const history = Array.isArray(messages) ? messages.slice(-10) : [];
+  const history = trimDuplicateLatestUserMessage(messages, query);
+  const maxTokens = getPositiveIntEnv(['GROQ_CHAT_MAX_TOKENS', 'GROQ_MAX_TOKENS'], 2200, 256, 8192);
   const chatMessages = [
     {
       role: 'system',
@@ -466,7 +494,7 @@ async function callGroqChat({ query, messages, apiKey, model }) {
       model,
       messages: chatMessages,
       temperature: 0.6,
-      max_tokens: 1200,
+      max_tokens: maxTokens,
     }),
   });
 
