@@ -313,6 +313,46 @@ function trimDuplicateLatestUserMessage(messages, query) {
   return history.slice(0, -1);
 }
 
+function buildContinuationPrompt() {
+  return [
+    'Continue exactly from where you stopped.',
+    'Do not repeat previous content.',
+    'If you were inside a Markdown code block, continue and close it correctly.',
+  ].join('\n');
+}
+
+function hasUnclosedCodeFence(text) {
+  const matches = String(text || '').match(/```/g);
+  return Boolean(matches && matches.length % 2 === 1);
+}
+
+function looksLikelyIncomplete(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  if (hasUnclosedCodeFence(raw)) return true;
+  if (/[,:;(\[{<'"`]\s*$/.test(raw)) return true;
+  if (/[A-Za-z0-9\u00C0-\u1EF9]$/.test(raw) && !/[.!?]\s*$/.test(raw)) {
+    return raw.length > 120;
+  }
+  return false;
+}
+
+function isTokenLimitFinishReason(reason) {
+  const value = String(reason || '').toUpperCase();
+  return value === 'MAX_TOKENS' || value === 'LENGTH';
+}
+
+function appendUniqueWebSources(base, payload) {
+  const merged = Array.isArray(base) ? [...base] : [];
+  const known = new Set(merged.map((item) => item?.url).filter(Boolean));
+  extractGroundingSources(payload).forEach((source) => {
+    if (!source?.url || known.has(source.url)) return;
+    known.add(source.url);
+    merged.push(source);
+  });
+  return merged;
+}
+
 function normalizeTextCompletion(payload, fallbackMessage) {
   const answer = String(payload || '').trim();
   if (answer) return answer;
@@ -367,6 +407,7 @@ async function callGeminiChat({ query, messages, apiKey, model }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const history = trimDuplicateLatestUserMessage(messages, query);
   const maxOutputTokens = getPositiveIntEnv(['GEMINI_CHAT_MAX_OUTPUT_TOKENS', 'GEMINI_MAX_OUTPUT_TOKENS'], 2200, 256, 8192);
+  const maxContinuationRounds = getPositiveIntEnv(['AI_CHAT_CONTINUE_STEPS'], 2, 1, 4);
 
   const contents = [];
   history.forEach((message) => {
@@ -383,46 +424,75 @@ async function callGeminiChat({ query, messages, apiKey, model }) {
     parts: [{ text: query }],
   });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
-    },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: buildChatSystemInstruction() }],
-      },
-      contents,
-      tools: [{ google_search: {} }],
-      generationConfig: {
-        temperature: 0.55,
-        maxOutputTokens,
-      },
-    }),
-  });
+  const chunks = [];
+  let webSources = [];
+  let finishReason = '';
+  let continuationRounds = 0;
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message = payload?.error?.message || 'Gemini Chat API trả về lỗi.';
-    const error = new Error(message);
-    error.statusCode = response.status;
-    throw error;
+  for (let round = 0; round <= maxContinuationRounds; round += 1) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: buildChatSystemInstruction() }],
+        },
+        contents,
+        tools: [{ google_search: {} }],
+        generationConfig: {
+          temperature: 0.55,
+          maxOutputTokens,
+        },
+      }),
+    });
+
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message = payload?.error?.message || 'Gemini Chat API returned an error.';
+      const error = new Error(message);
+      error.statusCode = response.status;
+      throw error;
+    }
+
+    const candidate = payload?.candidates?.[0];
+    const chunk = candidate?.content?.parts?.map((part) => part.text || '').join('').trim();
+    if (!chunk) {
+      const error = new Error('Gemini Chat did not return valid content.');
+      error.statusCode = 502;
+      throw error;
+    }
+
+    chunks.push(chunk);
+    webSources = appendUniqueWebSources(webSources, payload);
+    finishReason = String(candidate?.finishReason || '');
+
+    const combined = chunks.join('\n').trim();
+    const shouldContinue = (isTokenLimitFinishReason(finishReason) || looksLikelyIncomplete(combined))
+      && round < maxContinuationRounds;
+    if (!shouldContinue) break;
+
+    continuationRounds += 1;
+    contents.push({ role: 'model', parts: [{ text: chunk }] });
+    contents.push({ role: 'user', parts: [{ text: buildContinuationPrompt() }] });
   }
 
-  const answer = payload?.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
-  if (!answer) {
-    const error = new Error('Gemini Chat không trả về nội dung hợp lệ.');
-    error.statusCode = 502;
-    throw error;
-  }
+  const answer = chunks.join('\n').trim();
+  const truncatedLikely = isTokenLimitFinishReason(finishReason) || looksLikelyIncomplete(answer);
 
   return {
     answer,
     confidence: 'medium',
     matchedIds: [],
     followUps: [],
-    webSources: extractGroundingSources(payload),
+    webSources,
+    meta: {
+      finishReason,
+      continuationRounds,
+      truncatedLikely,
+    },
   };
 }
 
@@ -467,6 +537,8 @@ async function callGroqSearch({ query, candidates, apiKey, model }) {
 async function callGroqChat({ query, messages, apiKey, model }) {
   const history = trimDuplicateLatestUserMessage(messages, query);
   const maxTokens = getPositiveIntEnv(['GROQ_CHAT_MAX_TOKENS', 'GROQ_MAX_TOKENS'], 2200, 256, 8192);
+  const maxContinuationRounds = getPositiveIntEnv(['AI_CHAT_CONTINUE_STEPS'], 2, 1, 4);
+
   const chatMessages = [
     {
       role: 'system',
@@ -484,35 +556,61 @@ async function callGroqChat({ query, messages, apiKey, model }) {
     },
   ];
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: chatMessages,
-      temperature: 0.6,
-      max_tokens: maxTokens,
-    }),
-  });
+  const chunks = [];
+  let finishReason = '';
+  let continuationRounds = 0;
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message = payload?.error?.message || 'Groq Chat API trả về lỗi.';
-    const error = new Error(message);
-    error.statusCode = response.status;
-    throw error;
+  for (let round = 0; round <= maxContinuationRounds; round += 1) {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: chatMessages,
+        temperature: 0.6,
+        max_tokens: maxTokens,
+      }),
+    });
+
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message = payload?.error?.message || 'Groq Chat API returned an error.';
+      const error = new Error(message);
+      error.statusCode = response.status;
+      throw error;
+    }
+
+    const chunk = extractGroqText(payload, 'Groq Chat did not return valid content.');
+    finishReason = String(payload?.choices?.[0]?.finish_reason || '');
+    chunks.push(chunk);
+
+    const combined = chunks.join('\n').trim();
+    const shouldContinue = (isTokenLimitFinishReason(finishReason) || looksLikelyIncomplete(combined))
+      && round < maxContinuationRounds;
+    if (!shouldContinue) break;
+
+    continuationRounds += 1;
+    chatMessages.push({ role: 'assistant', content: chunk });
+    chatMessages.push({ role: 'user', content: buildContinuationPrompt() });
   }
 
-  const answer = extractGroqText(payload, 'Groq Chat không trả về nội dung hợp lệ.');
+  const answer = chunks.join('\n').trim();
+  const truncatedLikely = isTokenLimitFinishReason(finishReason) || looksLikelyIncomplete(answer);
+
   return {
     answer,
     confidence: 'medium',
     matchedIds: [],
     followUps: [],
     webSources: [],
+    meta: {
+      finishReason,
+      continuationRounds,
+      truncatedLikely,
+    },
   };
 }
 
@@ -781,6 +879,7 @@ module.exports = async (req, res) => {
       notice: aiResult.notice || null,
       provider: providerMeta?.provider || null,
       model: providerMeta?.model || null,
+      generationMeta: aiResult.meta || null,
       attempts: providerAttempts,
     });
   } catch (error) {
