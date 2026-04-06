@@ -1,9 +1,3 @@
-<button class="qx-font-cycle" id="qx-font-cycle" type="button" aria-live="polite">
-  <span class="qx-font-cycle-kicker">Font</span>
-  <span class="qx-font-cycle-name" id="qx-font-cycle-name">Nunito</span>
-  <span class="qx-font-cycle-hint">Bấm để đổi</span>
-</button>
-
 <script>
 (() => {
   const body = document.body;
@@ -85,59 +79,5 @@
   }, { passive: true });
 
   showNav();
-})();
-</script>
-
-<script>
-(() => {
-  const root = document.documentElement;
-  const button = document.getElementById('qx-font-cycle');
-  const label = document.getElementById('qx-font-cycle-name');
-  const hint = button.querySelector('.qx-font-cycle-hint');
-  if (!root || !button || !label || !hint) return;
-
-  const storageKey = 'qx:font-preset:v1';
-  const presets = [
-    { id: 'quicksand', name: 'Quicksand', hint: 'Sans bo tròn' },
-    { id: 'nunito', name: 'Nunito', hint: 'Sans mềm' },
-    { id: 'noto-serif', name: 'Noto Serif', hint: 'Serif cổ điển' },
-    { id: 'bitter', name: 'Bitter', hint: 'Serif đậm nét' }
-  ];
-  const readStoredPreset = () => {
-    try {
-      return window.localStorage.getItem(storageKey);
-    } catch {
-      return null;
-    }
-  };
-  const writeStoredPreset = (value) => {
-    try {
-      window.localStorage.setItem(storageKey, value);
-    } catch {}
-  };
-
-  const normalizePreset = (value) => {
-    return presets.some((preset) => preset.id === value) ? value : 'nunito';
-  };
-
-  const updateButton = (presetId) => {
-    const current = presets.find((preset) => preset.id === presetId) || presets[1];
-    root.dataset.fontPreset = current.id;
-    label.textContent = current.name;
-    hint.textContent = current.hint;
-    button.setAttribute('aria-label', `Đổi font website. Font hiện tại: ${current.name}`);
-    button.title = `Đổi font (${current.name})`;
-  };
-
-  const currentPreset = normalizePreset(readStoredPreset());
-  updateButton(currentPreset);
-
-  button.addEventListener('click', () => {
-    const activePreset = normalizePreset(root.dataset.fontPreset || readStoredPreset());
-    const currentIndex = presets.findIndex((preset) => preset.id === activePreset);
-    const nextPreset = presets[(currentIndex + 1) % presets.length];
-    writeStoredPreset(nextPreset.id);
-    updateButton(nextPreset.id);
-  });
 })();
 </script>

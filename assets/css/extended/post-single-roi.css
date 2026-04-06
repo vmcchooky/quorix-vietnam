@@ -2166,12 +2166,14 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 .qx-post-single .post-meta,
 .qx-post-single .qx-post-kicker,
 .qx-post-single .qx-post-badges,
-.qx-post-single .qx-post-tldr,
-.qx-post-single .qx-post-focus,
 .qx-post-single .qx-desktop-toc,
 .qx-post-single .qx-inline-related,
 .qx-post-single .qx-series-preview,
-.qx-post-single .qx-post-end-cta {
+.qx-post-single .qx-post-end-cta,
+.qx-post-single .entry-cover figcaption,
+.qx-post-single .qx-series-preview-kicker,
+.qx-post-single .qx-end-kicker,
+.qx-post-single .qx-post-focus-kicker {
   font-family: var(--qx-article-ui-font);
 }
 
@@ -2179,6 +2181,7 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
   max-width: 58ch;
   margin-inline: auto;
   text-wrap: pretty;
+  font-family: var(--qx-article-body-font);
 }
 
 .qx-post-badges {
@@ -2199,7 +2202,6 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 .qx-post-single .post-content > h3,
 .qx-post-single .post-content > h4,
 .qx-post-single .post-content > table,
-.qx-post-single .post-content > blockquote::before,
 .qx-post-single .post-content :not(pre) > code,
 .qx-post-single .post-content pre,
 .qx-post-single .post-content code {
@@ -2229,6 +2231,20 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
   font-size: clamp(1.12rem, 1rem + 0.34vw, 1.28rem);
   line-height: 1.34;
   letter-spacing: -0.012em;
+}
+
+.qx-post-single .entry-cover figcaption,
+.qx-post-single .qx-lightbox-caption,
+.qx-post-single .post-content > blockquote::before {
+  font-family: var(--qx-font-note-ui);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.qx-post-single .post-content > blockquote p {
+  font-family: var(--qx-font-note-body);
+  font-style: italic;
+  font-weight: 400;
 }
 
 .qx-post-single .post-content > table {
