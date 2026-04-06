@@ -2116,9 +2116,9 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 
 /* Final title + Vietnamese typography pass */
 .qx-post-single {
-  --qx-article-display-font: "Nunito", "Nunito Sans", "Segoe UI", sans-serif;
-  --qx-article-ui-font: "Nunito Sans", "Segoe UI", sans-serif;
-  --qx-article-body-font: "Nunito Sans", "Segoe UI", sans-serif;
+  --qx-article-display-font: var(--qx-font-display);
+  --qx-article-ui-font: var(--qx-font-ui);
+  --qx-article-body-font: var(--qx-font-body);
 }
 
 .qx-post-single .post-header {

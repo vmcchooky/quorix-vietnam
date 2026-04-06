@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&family=Nunito+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&family=Nunito:wght@400;700;800&family=Noto+Serif:wght@400;700&family=Bitter:wght@400;700&display=swap');
 
 :root {
   --qx-red: #ef5b5f;
@@ -27,6 +27,33 @@
   --qx-main-top-pad: clamp(1.45rem, 3.1vh, 2.25rem);
   --qx-main-bottom-pad: 1rem;
   --qx-content-rail: clamp(0.16rem, 0.9vw, 0.62rem);
+  --qx-font-ui: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-display: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-body: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+html[data-font-preset="quicksand"] {
+  --qx-font-ui: "Quicksand", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-display: "Quicksand", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-body: "Quicksand", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+html[data-font-preset="nunito"] {
+  --qx-font-ui: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-display: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-body: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+html[data-font-preset="noto-serif"] {
+  --qx-font-ui: "Noto Serif", Georgia, serif;
+  --qx-font-display: "Noto Serif", Georgia, serif;
+  --qx-font-body: "Noto Serif", Georgia, serif;
+}
+
+html[data-font-preset="bitter"] {
+  --qx-font-ui: "Bitter", Georgia, serif;
+  --qx-font-display: "Bitter", Georgia, serif;
+  --qx-font-body: "Bitter", Georgia, serif;
 }
 
 html[data-theme="light"],
@@ -85,7 +112,7 @@ body,
 }
 
 body {
-  font-family: "Nunito Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--qx-font-body);
   color: var(--qx-text);
   padding-bottom: 112px;
 }
@@ -100,7 +127,18 @@ h2,
 h3,
 .logo a,
 .post-title {
-  font-family: "Nunito", "Nunito Sans", "Segoe UI", sans-serif;
+  font-family: var(--qx-font-display);
+}
+
+button,
+input,
+select,
+textarea,
+.post-meta,
+.breadcrumbs,
+#menu a,
+.logo a {
+  font-family: var(--qx-font-ui);
 }
 
 a {
@@ -207,6 +245,52 @@ body.is-nav-returning .header {
 
 .top-link {
   bottom: 96px;
+}
+
+.qx-font-cycle {
+  position: fixed;
+  right: 18px;
+  bottom: 154px;
+  z-index: 135;
+  display: inline-grid;
+  gap: 0.08rem;
+  min-width: 138px;
+  padding: 0.72rem 0.9rem 0.76rem;
+  border: 1px solid var(--qx-border);
+  border-radius: 18px;
+  background: var(--qx-surface-strong);
+  color: var(--qx-text);
+  box-shadow: var(--qx-shadow);
+  backdrop-filter: blur(14px);
+  text-align: left;
+  transition: transform 0.22s var(--qx-curve), border-color 0.22s var(--qx-curve), background-color 0.22s var(--qx-curve);
+}
+
+.qx-font-cycle:hover {
+  transform: translateY(-2px);
+  border-color: rgba(110, 149, 202, 0.42);
+}
+
+.qx-font-cycle-kicker {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--qx-muted);
+}
+
+.qx-font-cycle-name {
+  font-family: var(--qx-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.qx-font-cycle-hint {
+  color: var(--qx-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .main {
@@ -851,6 +935,24 @@ body.is-nav-returning .header {
 
   .footer {
     margin-bottom: 76px;
+  }
+}
+
+@media (max-width: 768px) {
+  .qx-font-cycle {
+    right: 12px;
+    bottom: calc(140px + env(safe-area-inset-bottom));
+    min-width: 126px;
+    padding: 0.62rem 0.76rem 0.68rem;
+    border-radius: 16px;
+  }
+
+  .qx-font-cycle-name {
+    font-size: 0.94rem;
+  }
+
+  .qx-font-cycle-hint {
+    font-size: 0.7rem;
   }
 }
 
