@@ -2116,9 +2116,9 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 
 /* Final title + Vietnamese typography pass */
 .qx-post-single {
-  --qx-article-display-font: "Be Vietnam Pro", "Segoe UI", sans-serif;
-  --qx-article-ui-font: "Be Vietnam Pro", "Segoe UI", sans-serif;
-  --qx-article-body-font: "Noto Serif", Georgia, serif;
+  --qx-article-display-font: "Nunito", "Nunito Sans", "Segoe UI", sans-serif;
+  --qx-article-ui-font: "Nunito Sans", "Segoe UI", sans-serif;
+  --qx-article-body-font: "Nunito Sans", "Segoe UI", sans-serif;
 }
 
 .qx-post-single .post-header {
@@ -2147,9 +2147,10 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
   margin-inline: auto;
   text-align: center;
   font-family: var(--qx-article-display-font);
-  font-size: clamp(2.2rem, 5vw, 3.35rem);
-  line-height: 1.02;
-  letter-spacing: -0.032em;
+  font-size: clamp(2.14rem, 4.8vw, 3.12rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
   text-wrap: unset;
 }
 
@@ -2186,8 +2187,9 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 
 .qx-post-single .post-content {
   font-family: var(--qx-article-body-font);
-  font-size: clamp(1.09rem, 1.02rem + 0.18vw, 1.17rem);
-  line-height: 1.94;
+  font-size: clamp(1.06rem, 1rem + 0.16vw, 1.13rem);
+  font-weight: 500;
+  line-height: 1.9;
   font-optical-sizing: auto;
   font-feature-settings: "kern" 1, "liga" 1;
 }
@@ -2209,6 +2211,25 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
   max-width: min(92ch, 100%);
 }
 
+.qx-post-single .post-content > h2,
+.qx-post-single .post-content > h3,
+.qx-post-single .post-content > h4 {
+  font-family: var(--qx-article-display-font);
+  font-weight: 700;
+}
+
+.qx-post-single .post-content > h2 {
+  font-size: clamp(1.46rem, 1.22rem + 0.72vw, 1.8rem);
+  line-height: 1.18;
+  letter-spacing: -0.018em;
+}
+
+.qx-post-single .post-content > h3 {
+  font-size: clamp(1.12rem, 1rem + 0.34vw, 1.28rem);
+  line-height: 1.34;
+  letter-spacing: -0.012em;
+}
+
 .qx-post-single .post-content > table {
   font-size: 1.02rem;
 }
@@ -2224,8 +2245,8 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 @media (max-width: 768px) {
   .qx-post-single .post-title {
     max-width: 16ch;
-    font-size: clamp(1.9rem, 6.8vw, 2.45rem);
-    line-height: 1.06;
+    font-size: clamp(1.82rem, 6.4vw, 2.28rem);
+    line-height: 1.08;
   }
 
   .qx-post-single .post-description {
@@ -2233,8 +2254,8 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
   }
 
   .qx-post-single .post-content {
-    font-size: 1.03rem;
-    line-height: 1.86;
+    font-size: 1.01rem;
+    line-height: 1.84;
   }
 
   .qx-post-single .post-content > table,
