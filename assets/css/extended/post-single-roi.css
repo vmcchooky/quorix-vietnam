@@ -2114,6 +2114,140 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
   }
 }
 
+/* Final title + Vietnamese typography pass */
+.qx-post-single {
+  --qx-article-display-font: "Be Vietnam Pro", "Segoe UI", sans-serif;
+  --qx-article-ui-font: "Be Vietnam Pro", "Segoe UI", sans-serif;
+  --qx-article-body-font: "Noto Serif", Georgia, serif;
+}
+
+.qx-post-single .post-header {
+  text-align: center;
+}
+
+.qx-post-single .post-header > * {
+  width: min(100%, 68ch);
+}
+
+.qx-post-single .breadcrumbs {
+  justify-content: center;
+  font-family: var(--qx-article-ui-font);
+}
+
+.qx-post-single .post-title.entry-hint-parent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22rem;
+}
+
+.qx-post-single .post-title {
+  max-width: 19ch;
+  margin-inline: auto;
+  text-align: center;
+  font-family: var(--qx-article-display-font);
+  font-size: clamp(2.2rem, 5vw, 3.35rem);
+  line-height: 1.02;
+  letter-spacing: -0.032em;
+  text-wrap: unset;
+}
+
+.qx-post-title-line {
+  display: block;
+}
+
+.qx-post-title-line + .qx-post-title-line {
+  margin-top: 0.06em;
+}
+
+.qx-post-single .post-description,
+.qx-post-single .post-meta,
+.qx-post-single .qx-post-kicker,
+.qx-post-single .qx-post-badges,
+.qx-post-single .qx-post-tldr,
+.qx-post-single .qx-post-focus,
+.qx-post-single .qx-desktop-toc,
+.qx-post-single .qx-inline-related,
+.qx-post-single .qx-series-preview,
+.qx-post-single .qx-post-end-cta {
+  font-family: var(--qx-article-ui-font);
+}
+
+.qx-post-single .post-description {
+  max-width: 58ch;
+  margin-inline: auto;
+  text-wrap: pretty;
+}
+
+.qx-post-badges {
+  justify-content: center;
+}
+
+.qx-post-single .post-content {
+  font-family: var(--qx-article-body-font);
+  font-size: clamp(1.09rem, 1.02rem + 0.18vw, 1.17rem);
+  line-height: 1.94;
+  font-optical-sizing: auto;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+.qx-post-single .post-content > h2,
+.qx-post-single .post-content > h3,
+.qx-post-single .post-content > h4,
+.qx-post-single .post-content > table,
+.qx-post-single .post-content > blockquote::before,
+.qx-post-single .post-content :not(pre) > code,
+.qx-post-single .post-content pre,
+.qx-post-single .post-content code {
+  font-family: var(--qx-article-ui-font);
+}
+
+.qx-post-single .post-content > table,
+.qx-post-single .post-content > pre,
+.qx-post-single .post-content .highlight {
+  max-width: min(92ch, 100%);
+}
+
+.qx-post-single .post-content > table {
+  font-size: 1.02rem;
+}
+
+.qx-post-single .post-content > table thead th {
+  font-size: 0.76rem;
+}
+
+.qx-post-single .post-content > table tbody td:first-child {
+  width: 21%;
+}
+
+@media (max-width: 768px) {
+  .qx-post-single .post-title {
+    max-width: 16ch;
+    font-size: clamp(1.9rem, 6.8vw, 2.45rem);
+    line-height: 1.06;
+  }
+
+  .qx-post-single .post-description {
+    max-width: 100%;
+  }
+
+  .qx-post-single .post-content {
+    font-size: 1.03rem;
+    line-height: 1.86;
+  }
+
+  .qx-post-single .post-content > table,
+  .qx-post-single .post-content > pre,
+  .qx-post-single .post-content .highlight {
+    max-width: 100%;
+  }
+
+  .qx-post-single .post-content > table {
+    font-size: 0.95rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .qx-reading-marker,
   .qx-follow-rss,

@@ -5,6 +5,7 @@
 
 {{- $tldrItems := .Params.tldr | default (slice) -}}
 {{- $headerBadges := .Params.badges | default (slice) -}}
+{{- $headlineBreaks := .Param "headlineBreaks" | default (slice) -}}
 {{- $focusPoints := .Params.focusPoints | default (slice) -}}
 {{- $seriesPreview := .Params.seriesPreview -}}
 {{- $tocHtml := .TableOfContents -}}
@@ -34,7 +35,13 @@
     <p class="qx-post-kicker">{{ . }}</p>
     {{- end }}
     <h1 class="post-title entry-hint-parent">
-      {{ .Title }}
+      {{- if gt (len $headlineBreaks) 0 -}}
+        {{- range $headlineBreaks -}}
+        <span class="qx-post-title-line">{{ . }}</span>
+        {{- end -}}
+      {{- else -}}
+        {{ .Title }}
+      {{- end -}}
       {{- if .Draft }}
       <span class="entry-hint" title="Draft">
         <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">

@@ -12,6 +12,7 @@ categories = ["Security", "Project Log"]
 tags = ["System Design", "Security", "Redis", "Web Crypto", "Go"]
 series = ["Xây dựng one-time-link"]
 kicker = "Series mở đầu"
+headlineBreaks = ["Một Link, Một Lần", "Đọc, và Rất Nhiều", "Thứ Để Nghĩ"]
 badges = ["Bài #1", "Milestone 1", "Trust Model", "Read-once UX"]
 
 [[focusPoints]]
