@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Categories on Quorix Viet Nam</title>
+    <link>https://quorix.io.vn/categories/</link>
+    <description>Recent content in Categories on Quorix Viet Nam</description>
+    <generator>Hugo</generator>
+    <language>vi</language>
+    <lastBuildDate>Mon, 06 Apr 2026 13:00:00 +0700</lastBuildDate>
+    <atom:link href="https://quorix.io.vn/categories/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Project Log</title>
+      <link>https://quorix.io.vn/categories/project-log/</link>
+      <pubDate>Mon, 06 Apr 2026 13:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/project-log/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Security</title>
+      <link>https://quorix.io.vn/categories/security/</link>
+      <pubDate>Mon, 06 Apr 2026 13:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/security/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Backend</title>
+      <link>https://quorix.io.vn/categories/backend/</link>
+      <pubDate>Sun, 29 Mar 2026 10:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/backend/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Dự Án</title>
+      <link>https://quorix.io.vn/categories/d%E1%BB%B1-%C3%A1n/</link>
+      <pubDate>Sun, 29 Mar 2026 10:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/d%E1%BB%B1-%C3%A1n/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Programming</title>
+      <link>https://quorix.io.vn/categories/programming/</link>
+      <pubDate>Sun, 29 Mar 2026 10:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/programming/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Project</title>
+      <link>https://quorix.io.vn/categories/project/</link>
+      <pubDate>Sun, 29 Mar 2026 09:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/project/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Lab Note</title>
+      <link>https://quorix.io.vn/categories/lab-note/</link>
+      <pubDate>Sun, 29 Mar 2026 08:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/lab-note/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Networking</title>
+      <link>https://quorix.io.vn/categories/networking/</link>
+      <pubDate>Sun, 29 Mar 2026 08:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/categories/networking/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>OSPF on Quorix Viet Nam</title>
+    <link>https://quorix.io.vn/tags/ospf/</link>
+    <description>Recent content in OSPF on Quorix Viet Nam</description>
+    <generator>Hugo</generator>
+    <language>vi</language>
+    <lastBuildDate>Sun, 29 Mar 2026 08:00:00 +0700</lastBuildDate>
+    <atom:link href="https://quorix.io.vn/tags/ospf/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Cấu hình OSPF Single-Area cơ bản trên Router Cisco</title>
+      <link>https://quorix.io.vn/posts/ccna-ospf-lab/</link>
+      <pubDate>Sun, 29 Mar 2026 08:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/posts/ccna-ospf-lab/</guid>
+      <description>&lt;p&gt;Trong bài lab này, mục tiêu là thiết lập giao thức định tuyến OSPF (Open Shortest Path First) cho một mạng Single-Area (Area 0) để các Router có thể trao đổi bảng định tuyến tự động.&lt;/p&gt;
+&lt;h2 id=&#34;1-mục-tiêu-lab&#34;&gt;1. Mục tiêu Lab&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Nắm quy trình bật OSPF trên router Cisco theo chuẩn CCNA.&lt;/li&gt;
+&lt;li&gt;Thiết lập OSPF process ID &lt;code&gt;1&lt;/code&gt; cho mô hình 3 router.&lt;/li&gt;
+&lt;li&gt;Quảng bá các mạng trực tiếp vào &lt;code&gt;Area 0&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Xác minh trạng thái láng giềng (neighbor) và bảng định tuyến OSPF.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;2-sơ-đồ-và-yêu-cầu&#34;&gt;2. Sơ đồ và yêu cầu&lt;/h2&gt;
+&lt;p&gt;Mô hình gồm 3 router kết nối theo tam giác:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

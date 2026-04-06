@@ -4,6 +4,9 @@
 {{- $prevPost := $allPostPages.Next . -}}
 
 {{- $tldrItems := .Params.tldr | default (slice) -}}
+{{- $headerBadges := .Params.badges | default (slice) -}}
+{{- $focusPoints := .Params.focusPoints | default (slice) -}}
+{{- $seriesPreview := .Params.seriesPreview -}}
 {{- $tocHtml := .TableOfContents -}}
 {{- $hasToc := gt (len (findRE `<a ` $tocHtml 1)) 0 -}}
 
@@ -27,6 +30,9 @@
 
   <header class="post-header qx-post-header">
     {{ partial "breadcrumbs.html" . }}
+    {{- with .Params.kicker }}
+    <p class="qx-post-kicker">{{ . }}</p>
+    {{- end }}
     <h1 class="post-title entry-hint-parent">
       {{ .Title }}
       {{- if .Draft }}
@@ -51,6 +57,13 @@
       {{- partial "post_canonical.html" . -}}
     </div>
     {{- end }}
+    {{- if gt (len $headerBadges) 0 -}}
+    <div class="qx-post-badges" aria-label="Điểm nhấn bài viết">
+      {{- range $headerBadges -}}
+      <span class="qx-post-badge">{{ . }}</span>
+      {{- end -}}
+    </div>
+    {{- end -}}
   </header>
 
   {{- if gt (len $tldrItems) 0 -}}
@@ -61,6 +74,23 @@
       <li>{{ . }}</li>
       {{- end -}}
     </ul>
+  </section>
+  {{- end -}}
+
+  {{- if gt (len $focusPoints) 0 -}}
+  <section class="qx-post-focus" aria-label="Các trục chính của bài viết">
+    <div class="qx-post-focus-head">
+      <p class="qx-post-focus-kicker">Bản đồ bài viết</p>
+      <h2>Ba điểm chính cần giữ trong đầu khi đọc</h2>
+    </div>
+    <div class="qx-post-focus-grid">
+      {{- range $focusPoints -}}
+      <article class="qx-post-focus-card">
+        <h3>{{ .title }}</h3>
+        <p>{{ .body }}</p>
+      </article>
+      {{- end -}}
+    </div>
   </section>
   {{- end -}}
 
@@ -101,6 +131,28 @@
       <li><a href="{{ .Permalink }}">{{ .LinkTitle }}</a></li>
       {{- end }}
     </ul>
+
+    {{- with $seriesPreview -}}
+    <section class="qx-series-preview" aria-label="Tiếp theo trong series">
+      {{- with .kicker -}}
+      <p class="qx-series-preview-kicker">{{ . }}</p>
+      {{- end -}}
+      {{- with .title -}}
+      <h3>{{ . }}</h3>
+      {{- end -}}
+      {{- with .body -}}
+      <p class="qx-series-preview-body">{{ . }}</p>
+      {{- end -}}
+      <div class="qx-series-preview-actions">
+        {{- with .primaryUrl -}}
+        <a class="qx-series-preview-primary" href="{{ . | relLangURL }}">{{ $seriesPreview.primaryLabel | default "Xem thêm" }}</a>
+        {{- end -}}
+        {{- with .secondaryUrl -}}
+        <a class="qx-series-preview-secondary" href="{{ . | relLangURL }}">{{ $seriesPreview.secondaryLabel | default "Khám phá" }}</a>
+        {{- end -}}
+      </div>
+    </section>
+    {{- end -}}
 
     <section class="qx-post-end-cta" aria-label="Đọc bài tiếp theo">
       <div class="qx-next-primary">

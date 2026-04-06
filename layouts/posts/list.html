@@ -4,15 +4,20 @@
 {{- $featured := first 3 $allPosts -}}
 {{- $tags := slice -}}
 {{- $authors := slice -}}
+{{- $seriesNames := slice -}}
 {{- range $allPosts -}}
   {{- range (.Params.tags | default (slice)) -}}
     {{- $tags = $tags | append (printf "%v" .) -}}
+  {{- end -}}
+  {{- range (.Params.series | default (slice)) -}}
+    {{- $seriesNames = $seriesNames | append (printf "%v" .) -}}
   {{- end -}}
   {{- $authorName := printf "%v" (or .Params.author site.Params.author "Quorix Team") -}}
   {{- $authors = $authors | append $authorName -}}
 {{- end -}}
 {{- $tags = first 8 (uniq (sort $tags)) -}}
 {{- $authors = first 5 (uniq (sort $authors)) -}}
+{{- $seriesNames = uniq (sort $seriesNames) -}}
 
 {{- $requestedLayout := lower (printf "%v" (or site.Params.postsLayout "editorial")) -}}
 {{- $layout := "editorial" -}}
@@ -66,6 +71,38 @@
     <p class="qx-toolbar-state" id="qx-toolbar-state" aria-live="polite">Chưa chọn bộ lọc nào. Danh sách đang hiển thị đầy đủ bài viết.</p>
   </section>
 
+  {{- if gt (len $seriesNames) 0 -}}
+  <section class="qx-series-strip" aria-label="Series đang viết">
+    <div class="qx-series-strip-head">
+      <p class="qx-wireframe-kicker">SERIES</p>
+      <h2>Những chuỗi bài đang được phát triển</h2>
+      <p class="qx-wireframe-lead">Nếu bạn muốn đọc theo mạch, đây là nơi bắt đầu tốt hơn so với việc nhảy từng bài lẻ.</p>
+    </div>
+    <div class="qx-series-strip-grid">
+      {{- range first 3 $seriesNames -}}
+      {{- $seriesName := . -}}
+      {{- $seriesPosts := where $allPosts "Params.series" "intersect" (slice $seriesName) -}}
+      {{- $seriesStart := index ($seriesPosts.ByDate) 0 -}}
+      {{- $seriesLatest := index $seriesPosts 0 -}}
+      <article class="qx-series-card">
+        <p class="qx-series-card-kicker">Series</p>
+        <h3>{{ $seriesName }}</h3>
+        <p class="qx-series-card-meta">{{ len $seriesPosts }} bài • cập nhật {{ $seriesLatest.Date | time.Format "02/01/2006" }}</p>
+        <ul class="qx-series-card-list">
+          {{- range first 3 ($seriesPosts.ByDate) -}}
+          <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+          {{- end -}}
+        </ul>
+        <div class="qx-series-card-actions">
+          <a class="qx-series-card-primary" href="{{ $seriesStart.RelPermalink }}">Đọc từ đầu</a>
+          <a class="qx-series-card-secondary" href="{{ $seriesLatest.RelPermalink }}">Bài mới nhất</a>
+        </div>
+      </article>
+      {{- end -}}
+    </div>
+  </section>
+  {{- end -}}
+
   {{- if gt (len $allPosts) 0 -}}
 
   {{- if eq $layout "editorial" -}}
@@ -95,6 +132,9 @@
         </a>
         <div class="qx-feature-content">
           <p class="qx-label">Bài nổi bật</p>
+          {{- with $heroMain.Params.series -}}
+          <p class="qx-series-badge">Series • {{ index . 0 }}</p>
+          {{- end -}}
           <h2><a href="{{ $heroMain.RelPermalink }}">{{ $heroMain.Title }}</a></h2>
           <p>{{ $heroMain.Summary | plainify | truncate 170 }}</p>
           <div class="qx-meta-line">
@@ -122,6 +162,9 @@
           data-popularity="{{ $sidePopularity }}"
           data-editor="{{ $sideEditor }}">
           <p class="qx-label">Spotlight</p>
+          {{- with .Params.series -}}
+          <p class="qx-series-badge">Series • {{ index . 0 }}</p>
+          {{- end -}}
           <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
           <p>{{ .Summary | plainify | truncate 90 }}</p>
           <div class="qx-meta-line">
@@ -164,6 +207,9 @@
             <span>{{ .ReadingTime }} phút đọc</span>
             <span>{{ index $postTags 0 }}</span>
           </div>
+          {{- with .Params.series -}}
+          <p class="qx-series-badge qx-series-badge-card">Series • {{ index . 0 }}</p>
+          {{- end -}}
           <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
           <p>{{ .Summary | plainify | truncate 120 }}</p>
           <div class="qx-card-actions">
