@@ -93,14 +93,15 @@
   const root = document.documentElement;
   const button = document.getElementById('qx-font-cycle');
   const label = document.getElementById('qx-font-cycle-name');
-  if (!root || !button || !label) return;
+  const hint = button.querySelector('.qx-font-cycle-hint');
+  if (!root || !button || !label || !hint) return;
 
   const storageKey = 'qx:font-preset:v1';
   const presets = [
-    { id: 'quicksand', name: 'Quicksand' },
-    { id: 'nunito', name: 'Nunito' },
-    { id: 'noto-serif', name: 'Noto Serif' },
-    { id: 'bitter', name: 'Bitter' }
+    { id: 'quicksand', name: 'Quicksand', hint: 'Sans bo tròn' },
+    { id: 'nunito', name: 'Nunito', hint: 'Sans mềm' },
+    { id: 'noto-serif', name: 'Noto Serif', hint: 'Serif cổ điển' },
+    { id: 'bitter', name: 'Bitter', hint: 'Serif đậm nét' }
   ];
   const readStoredPreset = () => {
     try {
@@ -123,6 +124,7 @@
     const current = presets.find((preset) => preset.id === presetId) || presets[1];
     root.dataset.fontPreset = current.id;
     label.textContent = current.name;
+    hint.textContent = current.hint;
     button.setAttribute('aria-label', `Đổi font website. Font hiện tại: ${current.name}`);
     button.title = `Đổi font (${current.name})`;
   };

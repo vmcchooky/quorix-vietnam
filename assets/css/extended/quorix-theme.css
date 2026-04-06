@@ -30,30 +30,55 @@
   --qx-font-ui: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --qx-font-display: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --qx-font-body: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-ui-weight: 600;
+  --qx-font-display-weight: 700;
+  --qx-font-body-weight: 400;
+  --qx-font-display-spacing: -0.015em;
+  --qx-font-body-spacing: 0;
 }
 
 html[data-font-preset="quicksand"] {
   --qx-font-ui: "Quicksand", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --qx-font-display: "Quicksand", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --qx-font-body: "Quicksand", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-ui-weight: 600;
+  --qx-font-display-weight: 700;
+  --qx-font-body-weight: 400;
+  --qx-font-display-spacing: -0.008em;
+  --qx-font-body-spacing: 0.002em;
 }
 
 html[data-font-preset="nunito"] {
   --qx-font-ui: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --qx-font-display: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --qx-font-body: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --qx-font-ui-weight: 700;
+  --qx-font-display-weight: 700;
+  --qx-font-body-weight: 400;
+  --qx-font-display-spacing: -0.014em;
+  --qx-font-body-spacing: 0;
 }
 
 html[data-font-preset="noto-serif"] {
   --qx-font-ui: "Noto Serif", Georgia, serif;
   --qx-font-display: "Noto Serif", Georgia, serif;
   --qx-font-body: "Noto Serif", Georgia, serif;
+  --qx-font-ui-weight: 400;
+  --qx-font-display-weight: 700;
+  --qx-font-body-weight: 400;
+  --qx-font-display-spacing: -0.02em;
+  --qx-font-body-spacing: 0;
 }
 
 html[data-font-preset="bitter"] {
   --qx-font-ui: "Bitter", Georgia, serif;
   --qx-font-display: "Bitter", Georgia, serif;
   --qx-font-body: "Bitter", Georgia, serif;
+  --qx-font-ui-weight: 400;
+  --qx-font-display-weight: 700;
+  --qx-font-body-weight: 400;
+  --qx-font-display-spacing: -0.022em;
+  --qx-font-body-spacing: -0.002em;
 }
 
 html[data-theme="light"],
@@ -113,6 +138,8 @@ body,
 
 body {
   font-family: var(--qx-font-body);
+  font-weight: var(--qx-font-body-weight);
+  letter-spacing: var(--qx-font-body-spacing);
   color: var(--qx-text);
   padding-bottom: 112px;
 }
@@ -128,6 +155,8 @@ h3,
 .logo a,
 .post-title {
   font-family: var(--qx-font-display);
+  font-weight: var(--qx-font-display-weight);
+  letter-spacing: var(--qx-font-display-spacing);
 }
 
 button,
@@ -177,7 +206,7 @@ input:focus-visible {
 }
 
 .logo a {
-  font-weight: 800;
+  font-weight: var(--qx-font-display-weight);
   font-size: 1rem;
   letter-spacing: 0.02em;
   color: var(--qx-text);
@@ -282,7 +311,7 @@ body.is-nav-returning .header {
 .qx-font-cycle-name {
   font-family: var(--qx-font-display);
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: var(--qx-font-display-weight);
   line-height: 1.2;
 }
 

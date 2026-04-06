@@ -2148,9 +2148,9 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
   text-align: center;
   font-family: var(--qx-article-display-font);
   font-size: clamp(2.14rem, 4.8vw, 3.12rem);
-  font-weight: 700;
+  font-weight: var(--qx-font-display-weight);
   line-height: 1.05;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--qx-font-display-spacing);
   text-wrap: unset;
 }
 
@@ -2188,8 +2188,9 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 .qx-post-single .post-content {
   font-family: var(--qx-article-body-font);
   font-size: clamp(1.06rem, 1rem + 0.16vw, 1.13rem);
-  font-weight: 500;
+  font-weight: var(--qx-font-body-weight);
   line-height: 1.9;
+  letter-spacing: var(--qx-font-body-spacing);
   font-optical-sizing: auto;
   font-feature-settings: "kern" 1, "liga" 1;
 }
@@ -2215,7 +2216,7 @@ html[data-theme="dark"] .qx-post-single .post-content > blockquote::before {
 .qx-post-single .post-content > h3,
 .qx-post-single .post-content > h4 {
   font-family: var(--qx-article-display-font);
-  font-weight: 700;
+  font-weight: var(--qx-font-display-weight);
 }
 
 .qx-post-single .post-content > h2 {
