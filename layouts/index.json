@@ -1,5 +1,5 @@
 {{- $items := slice -}}
-{{- $sections := slice "posts" "projects" "services" -}}
+{{- $sections := slice "posts" "projects" -}}
 {{- range where site.RegularPages "Section" "in" $sections -}}
   {{- if and (ne .Params.searchExclude true) (not .Draft) -}}
     {{- $plainContent := .Content | plainify | replaceRE `\s+` " " | trim " " -}}

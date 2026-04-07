@@ -21,7 +21,7 @@ buildExpired = false
 [params]
   env = "production"
   title = "Quorix Viet Nam"
-  description = "Website local brand của Quorix Việt Nam, nơi chia sẻ kiến thức network, Golang, công nghệ và giới thiệu các dự án, dịch vụ kỹ thuật."
+  description = "Portfolio và Blog chia sẻ kiến thức Hệ thống, Mạng và Bảo mật của Mạnh Cường."
   author = "Mạnh Cường"
   defaultTheme = "auto"
   disableThemeToggle = false
@@ -57,9 +57,9 @@ buildExpired = false
 
 [menu]
   [[menu.main]]
-    identifier = "services"
-    name = "Dịch vụ"
-    url = "/services/"
+    identifier = "posts"
+    name = "Bài viết"
+    url = "/posts/"
     weight = 10
   [[menu.main]]
     identifier = "projects"
@@ -67,15 +67,20 @@ buildExpired = false
     url = "/projects/"
     weight = 20
   [[menu.main]]
-    identifier = "posts"
-    name = "Bài viết"
-    url = "/posts/"
+    identifier = "categories"
+    name = "Chuyên mục"
+    url = "/categories/"
     weight = 30
+  [[menu.main]]
+    identifier = "tags"
+    name = "Từ khóa"
+    url = "/tags/"
+    weight = 40
   [[menu.main]]
     identifier = "search"
     name = "Hỏi Quorix"
     url = "/search/"
-    weight = 40
+    weight = 50
 
 [markup]
   [markup.highlight]
