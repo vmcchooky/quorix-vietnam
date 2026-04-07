@@ -7,7 +7,7 @@
   </header>
 
   <div class="qx-grid qx-grid-projects">
-    {{ range .Pages.ByDate.Reverse }}
+    {{ range .RegularPages.ByDate.Reverse }}
     <article class="qx-card qx-card-project">
       <p class="qx-chip">{{ .Date | time.Format ":date_long" }}</p>
       <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>

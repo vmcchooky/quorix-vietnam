@@ -1,6 +1,6 @@
 ---
 title: "Quorix UI"
-date: 2026-04-07T20:15:00+07:00
+date: 2026-04-07T15:00:00+07:00
 draft: false
 summary: "Design system toolkit nền tảng của Quorix, cung cấp reset, color tokens, typography, font và utility classes để dùng chung cho quorix-vietnam và các dự án tiếp theo."
 description: "Dịch vụ UI foundation đầu tiên của Quorix Việt Nam, phát triển để phục vụ trực tiếp quorix-vietnam và mở rộng dần thành lớp giao diện dùng chung cho các sản phẩm sau này."
