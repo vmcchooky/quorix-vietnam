@@ -1,0 +1,63 @@
+{{ define "main" }}
+{{ $categories := site.Taxonomies.categories.Alphabetical }}
+{{ $tags := site.Taxonomies.tags.Alphabetical }}
+<section class="qx-taxonomy-shell">
+  <header class="qx-project-head">
+    <p class="qx-kicker">TAXONOMY HUB</p>
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p>{{ . }}</p>{{ end }}
+  </header>
+
+  <div class="qx-taxonomy-grid">
+    <section class="qx-card qx-taxonomy-panel">
+      <header class="qx-taxonomy-head">
+        <h2>Categories</h2>
+        <p>Nhóm nội dung theo chuyên mục.</p>
+      </header>
+      <div class="qx-taxonomy-list">
+        {{ range $categories }}
+        <article class="qx-taxonomy-item">
+          <div>
+            <h3><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></h3>
+            <p>{{ .Count }} bài</p>
+          </div>
+          <span class="qx-chip">{{ .Count }}</span>
+        </article>
+        {{ else }}
+        <article class="qx-taxonomy-item qx-taxonomy-empty">
+          <div>
+            <h3>Chưa có category</h3>
+            <p>Hãy gán categories cho bài viết để hiển thị tại đây.</p>
+          </div>
+        </article>
+        {{ end }}
+      </div>
+    </section>
+
+    <section class="qx-card qx-taxonomy-panel">
+      <header class="qx-taxonomy-head">
+        <h2>Tags</h2>
+        <p>Từ khóa chi tiết để duyệt nhanh nội dung.</p>
+      </header>
+      <div class="qx-taxonomy-list">
+        {{ range $tags }}
+        <article class="qx-taxonomy-item">
+          <div>
+            <h3><a href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a></h3>
+            <p>{{ .Count }} bài</p>
+          </div>
+          <span class="qx-chip">{{ .Count }}</span>
+        </article>
+        {{ else }}
+        <article class="qx-taxonomy-item qx-taxonomy-empty">
+          <div>
+            <h3>Chưa có tag</h3>
+            <p>Hãy gán tags cho bài viết để hiển thị tại đây.</p>
+          </div>
+        </article>
+        {{ end }}
+      </div>
+    </section>
+  </div>
+</section>
+{{ end }}

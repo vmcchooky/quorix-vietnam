@@ -67,14 +67,14 @@ buildExpired = false
     url = "/projects/"
     weight = 20
   [[menu.main]]
-    identifier = "categories"
-    name = "Chuyên mục"
-    url = "/categories/"
+    identifier = "services"
+    name = "Dịch vụ"
+    url = "/services/"
     weight = 30
   [[menu.main]]
-    identifier = "tags"
-    name = "Từ khóa"
-    url = "/tags/"
+    identifier = "taxonomy"
+    name = "Chủ đề"
+    url = "/taxonomy/"
     weight = 40
   [[menu.main]]
     identifier = "search"
