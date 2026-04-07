@@ -1,0 +1,61 @@
+{{ define "main" }}
+<section class="qx-service-shell">
+  <header class="qx-service-head">
+    <p class="qx-kicker">QUORIX SERVICES</p>
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p>{{ . }}</p>{{ end }}
+  </header>
+
+  <section class="qx-service-overview-grid" aria-label="Định hướng dịch vụ Quorix">
+    <article class="qx-service-overview-card">
+      <p class="qx-service-overview-kicker">Cách Quorix đóng gói giá trị</p>
+      <h2>Từ kiến thức kỹ thuật sang tài nguyên có thể dùng lại</h2>
+      <p>Nhánh Dịch vụ là nơi Quorix Việt Nam giới thiệu những gì đã được đóng gói ở mức đủ thực dụng để đem vào sản phẩm, website hoặc quy trình triển khai thực tế.</p>
+    </article>
+
+    <article class="qx-service-overview-card">
+      <p class="qx-service-overview-kicker">Vai trò trong hệ sinh thái</p>
+      <h2>Ưu tiên các khối nền tảng phục vụ chính cho quorix-vietnam</h2>
+      <p>Mỗi dịch vụ có thể bắt đầu từ một toolkit nhỏ, nhưng được thiết kế để phát triển tiếp thành nền tảng mạnh hơn cho brand site, các dự án nội bộ và những sản phẩm Quorix sau này.</p>
+    </article>
+  </section>
+
+  <div class="qx-service-grid">
+    {{ range .Pages.ByDate.Reverse }}
+    <article class="qx-service-card">
+      <div class="qx-service-card-top">
+        {{ with .Params.serviceType }}<span class="qx-service-pill">{{ . }}</span>{{ end }}
+        {{ with .Params.serviceStage }}<span class="qx-service-pill qx-service-pill-soft">{{ . }}</span>{{ end }}
+      </div>
+
+      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+      <p class="qx-service-card-summary">{{ .Summary | plainify | truncate 170 }}</p>
+
+      <div class="qx-service-card-meta">
+        {{ with .Params.packageName }}<span>{{ . }}</span>{{ end }}
+        {{ with .Params.packageVersion }}<span>v{{ . }}</span>{{ end }}
+        {{ with .Params.delivery }}<span>{{ . }}</span>{{ end }}
+      </div>
+
+      {{ with .Params.highlights }}
+      <ul class="qx-service-feature-list">
+        {{ range first 3 . }}
+        <li>{{ . }}</li>
+        {{ end }}
+      </ul>
+      {{ end }}
+
+      <div class="qx-service-card-actions">
+        <a class="qx-service-card-primary" href="{{ .RelPermalink }}">Mở trang dịch vụ</a>
+        {{ with .Params.github }}<a class="qx-service-card-secondary" href="{{ . }}" target="_blank" rel="noopener noreferrer">GitHub</a>{{ end }}
+      </div>
+    </article>
+    {{ else }}
+    <article class="qx-service-card qx-service-card-empty">
+      <h2>Chưa có dịch vụ nào</h2>
+      <p>Hãy thêm file trong <code>content/services</code> để hiển thị danh sách dịch vụ tại đây.</p>
+    </article>
+    {{ end }}
+  </div>
+</section>
+{{ end }}

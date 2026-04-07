@@ -6,16 +6,17 @@
   <div class="qx-hero">
     <div class="qx-hero-copy">
       <p class="qx-kicker">QUORIX VIET NAM</p>
-      <h1>Kết nối tri thức mạng lưới, định tuyến tương lai số.</h1>
-      <p class="qx-lead">Blog và không gian kỹ thuật về Hệ thống, Mạng, Bảo mật và lập trình Golang. Tập trung tính thực chiến, tối giản trong trình bày và rõ ràng trong tư duy.</p>
-      <div class="qx-topic-row" aria-label="Chuyên môn Quorix">
+      <h1>Kết nối tri thức mạng lưới, sản phẩm hóa năng lực kỹ thuật địa phương.</h1>
+      <p class="qx-lead">Quorix Việt Nam là local brand về công nghệ, nơi chia sẻ kiến thức network, Golang, security và từng bước đóng gói chúng thành các dịch vụ, toolkit và dự án có thể sử dụng thực tế.</p>
+      <div class="qx-topic-row" aria-label="Trục chuyên môn Quorix">
         <span>Network Architecture</span>
-        <span>Security Mindset</span>
-        <span>Golang Engineering</span>
+        <span>Security Thinking</span>
+        <span>Golang Systems</span>
+        <span>Reusable UI Foundation</span>
       </div>
       <div class="qx-cta-row">
-        <a class="qx-btn qx-btn-primary" href="{{ "/posts/" | relLangURL }}">Đọc bài mới</a>
-        <a class="qx-btn qx-btn-ghost" href="{{ "/projects/" | relLangURL }}">Dự án của Quorix</a>
+        <a class="qx-btn qx-btn-primary" href="{{ "/services/" | relLangURL }}">Khám phá dịch vụ</a>
+        <a class="qx-btn qx-btn-ghost" href="{{ "/posts/" | relLangURL }}">Đọc bài mới</a>
       </div>
       <div class="qx-social-wrap">{{ partial "social_icons.html" (dict "align" "left") }}</div>
     </div>
@@ -31,8 +32,8 @@
       <header class="qx-section-head qx-section-head-tight">
         <h2>Về Quorix Việt Nam</h2>
       </header>
-      <p>Quorix Việt Nam là nền tảng chia sẻ kiến thức và dự án kỹ thuật dành cho cộng đồng yêu công nghệ. Phần giới thiệu chuyên sâu về định hướng, câu chuyện thương hiệu và mục tiêu dài hạn sẽ được cập nhật thêm trong thời gian tới.</p>
-      <p>Định hướng nội dung hiện tại tập trung trên ba trục chính: hạ tầng mạng, tư duy bảo mật và phát triển backend với Golang.</p>
+      <p>Quorix Việt Nam là không gian xây dựng local brand xoay quanh kỹ thuật thực chiến. Website này vừa là nơi xuất bản kiến thức, vừa là showroom nhỏ cho các dịch vụ và sản phẩm nội bộ đang được phát triển.</p>
+      <p>Trục phát triển hiện tại đi theo ba lớp rõ ràng: chia sẻ kiến thức chuyên sâu, hiện thực hóa thành dự án cụ thể, rồi nâng cấp dần thành những dịch vụ và tài nguyên tái sử dụng cho hệ sinh thái Quorix.</p>
     </article>
 
     <aside class="qx-card qx-contact-card">
@@ -42,29 +43,36 @@
       <ul class="qx-contact-list">
         <li><span>Email chung:</span> <a href="mailto:contact@quorix.io.vn">contact@quorix.io.vn</a></li>
         <li><span>Founder:</span> <a href="mailto:chooky@quorix.io.vn">chooky@quorix.io.vn</a></li>
-        <li><span>FB Founder:</span> <a href="https://facebook.com/chooky.vmc" target="_blank" rel="noopener noreferrer">facebook.com/chooky.vmc</a></li>
+        <li><span>Facebook:</span> <a href="https://facebook.com/chooky.vmc" target="_blank" rel="noopener noreferrer">facebook.com/chooky.vmc</a></li>
       </ul>
     </aside>
   </section>
 
   <section class="qx-section qx-section-sticker">
-    <img class="qx-sticker qx-sticker-posts" src="{{ "images/brand/mascot/gopher.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
+    <img class="qx-sticker qx-sticker-services" src="{{ "images/brand/mascot/gopher4.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
     <header class="qx-section-head">
-      <h2>Bài viết gần đây</h2>
-      <a href="{{ "/posts/" | relLangURL }}">Xem tất cả</a>
+      <h2>Dịch vụ đang mở</h2>
+      <a href="{{ "/services/" | relLangURL }}">Xem tất cả dịch vụ</a>
     </header>
-    <div class="qx-grid">
-      {{ $posts := where site.RegularPages "Section" "posts" }}
-      {{ range first 6 $posts }}
-      <article class="qx-card">
-        <p class="qx-card-meta">{{ .Date | time.Format ":date_long" }}</p>
+    <div class="qx-grid qx-grid-services">
+      {{ $services := (where site.RegularPages "Section" "services").ByDate.Reverse }}
+      {{ range first 3 $services }}
+      <article class="qx-card qx-card-service">
+        <div class="qx-service-card-head">
+          {{ with .Params.serviceType }}<p class="qx-chip">{{ . }}</p>{{ end }}
+          {{ with .Params.serviceStage }}<p class="qx-service-inline-meta">{{ . }}</p>{{ end }}
+        </div>
         <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
-        <p>{{ .Summary | plainify | truncate 120 }}</p>
+        <p>{{ .Summary | plainify | truncate 150 }}</p>
+        <div class="qx-service-inline-links">
+          <a href="{{ .RelPermalink }}">Xem chi tiết</a>
+          {{ with .Params.delivery }}<span>{{ . }}</span>{{ end }}
+        </div>
       </article>
       {{ else }}
       <article class="qx-card qx-card-empty">
-        <h3>Chưa có bài viết</h3>
-        <p>Hãy thêm bài mới trong thư mục content/posts để bắt đầu hành trình chia sẻ kiến thức.</p>
+        <h3>Chưa có dịch vụ</h3>
+        <p>Hãy thêm nội dung trong thư mục content/services để bắt đầu xây dựng lớp dịch vụ cho Quorix Việt Nam.</p>
       </article>
       {{ end }}
     </div>
@@ -77,7 +85,7 @@
       <a href="{{ "/projects/" | relLangURL }}">Khám phá dự án</a>
     </header>
     <div class="qx-grid qx-grid-projects">
-      {{ $projects := where site.RegularPages "Section" "projects" }}
+      {{ $projects := (where site.RegularPages "Section" "projects").ByDate.Reverse }}
       {{ range first 4 $projects }}
       <article class="qx-card qx-card-project">
         <p class="qx-chip">Dự án</p>
@@ -87,7 +95,30 @@
       {{ else }}
       <article class="qx-card qx-card-empty">
         <h3>Không có dữ liệu dự án</h3>
-        <p>Bạn có thể tạo mới tại content/projects để hiển thị tại khu vực này.</p>
+        <p>Bạn có thể tạo mới tại content/projects để hiển thị ở khu vực này.</p>
+      </article>
+      {{ end }}
+    </div>
+  </section>
+
+  <section class="qx-section qx-section-sticker">
+    <img class="qx-sticker qx-sticker-posts" src="{{ "images/brand/mascot/gopher.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
+    <header class="qx-section-head">
+      <h2>Bài viết gần đây</h2>
+      <a href="{{ "/posts/" | relLangURL }}">Xem tất cả</a>
+    </header>
+    <div class="qx-grid">
+      {{ $posts := (where site.RegularPages "Section" "posts").ByDate.Reverse }}
+      {{ range first 6 $posts }}
+      <article class="qx-card">
+        <p class="qx-card-meta">{{ .Date | time.Format ":date_long" }}</p>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Summary | plainify | truncate 120 }}</p>
+      </article>
+      {{ else }}
+      <article class="qx-card qx-card-empty">
+        <h3>Chưa có bài viết</h3>
+        <p>Hãy thêm bài mới trong thư mục content/posts để bắt đầu hành trình chia sẻ kiến thức.</p>
       </article>
       {{ end }}
     </div>
