@@ -1,0 +1,13 @@
+{{- $pageurl := .Permalink -}}
+{{- $title := .Title | plainify -}}
+<div class="qx-d-flex qx-flex-wrap qx-gap-2" aria-label="Chia sẻ bài viết">
+  <a class="qx-btn qx-btn-ghost" target="_blank" rel="noopener noreferrer" href="https://facebook.com/sharer/sharer.php?u={{ $pageurl }}">
+    Facebook
+  </a>
+  <a class="qx-btn qx-btn-ghost" target="_blank" rel="noopener noreferrer" href="https://x.com/intent/tweet/?text={{ $title }}&url={{ $pageurl }}">
+    X
+  </a>
+  <a class="qx-btn qx-btn-ghost" target="_blank" rel="noopener noreferrer" href="mailto:?subject={{ $title }}&body={{ $pageurl }}">
+    Email
+  </a>
+</div>

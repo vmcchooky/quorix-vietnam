@@ -1,0 +1,3 @@
+User-agent: *
+Disallow:
+Sitemap: https://quorix.io.vn/sitemap.xml

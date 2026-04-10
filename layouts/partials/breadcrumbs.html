@@ -1,0 +1,11 @@
+{{- if and (.Param "ShowBreadCrumbs") (not .IsHome) }}
+<nav class="qx-breadcrumbs qx-mb-4" aria-label="Breadcrumb">
+    <a class="qx-breadcrumb-item" href="{{ "" | absLangURL }}">{{ i18n "home" | default "Trang chủ" }}</a>
+    {{- range .Ancestors.Reverse }}
+        {{- if not .IsHome }}
+    <a class="qx-breadcrumb-item" href="{{ .Permalink }}">{{ .LinkTitle }}</a>
+        {{- end }}
+    {{- end }}
+    <span class="qx-breadcrumb-item" aria-current="page">{{ .LinkTitle }}</span>
+</nav>
+{{- end }}

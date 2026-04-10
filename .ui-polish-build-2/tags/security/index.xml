@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Security on Quorix Việt Nam</title>
+    <link>https://quorix.io.vn/tags/security/</link>
+    <description>Recent content in Security on Quorix Việt Nam</description>
+    <generator>Hugo</generator>
+    <language>vi</language>
+    <lastBuildDate>Mon, 06 Apr 2026 13:00:00 +0700</lastBuildDate>
+    <atom:link href="https://quorix.io.vn/tags/security/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Một Link, Một Lần Đọc, và Rất Nhiều Thứ Để Nghĩ</title>
+      <link>https://quorix.io.vn/posts/one-time-link-bai-01/</link>
+      <pubDate>Mon, 06 Apr 2026 13:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/posts/one-time-link-bai-01/</guid>
+      <description>Bài mở đầu series `one-time-link`: từ preview bot, race condition tới client-side encryption và trust model.</description>
+    </item>
+    <item>
+      <title>Safe Road</title>
+      <link>https://quorix.io.vn/projects/safe-road/</link>
+      <pubDate>Sun, 29 Mar 2026 10:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/projects/safe-road/</guid>
+      <description>Nền tảng theo dõi hạ tầng giao thông và cảnh báo tuyến đường an toàn theo thời gian thực.</description>
+    </item>
+  </channel>
+</rss>

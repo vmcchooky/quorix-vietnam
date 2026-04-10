@@ -1,0 +1,8 @@
+{{- $headers := findRE "<h[1-6].*?>(.|\n])+?</h[1-6]>" .Content -}}
+{{- if ge (len $headers) 1 -}}
+  {{- $toc := .TableOfContents -}}
+  {{- $toc = replace $toc "<nav id=\"TableOfContents\">" "<nav id=\"TableOfContents\" class=\"qx-d-grid qx-gap-2\">" -}}
+  {{- $toc = replace $toc "<ul>" "<ul class=\"qx-d-grid qx-gap-2\">" -}}
+  {{- $toc = replaceRE "<a href=" "<a class=\"qx-nav-item\" href=" $toc -}}
+  {{- $toc | safeHTML -}}
+{{- end -}}

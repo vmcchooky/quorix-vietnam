@@ -1,628 +1,142 @@
-﻿{{- define "main" }}
+{{- define "main" -}}
 {{- $allPostPages := where site.RegularPages "Section" "posts" -}}
 {{- $nextPost := $allPostPages.Prev . -}}
-{{- $prevPost := $allPostPages.Next . -}}
-
-{{- $tldrItems := .Params.tldr | default (slice) -}}
 {{- $headerBadges := .Params.badges | default (slice) -}}
-{{- $headlineBreaks := .Param "headlineBreaks" | default (slice) -}}
-{{- $focusPoints := .Params.focusPoints | default (slice) -}}
-{{- $seriesPreview := .Params.seriesPreview -}}
-{{- $tocHtml := .TableOfContents -}}
-{{- $hasToc := gt (len (findRE `<a ` $tocHtml 1)) 0 -}}
-
 {{- $relatedPool := where site.RegularPages "Section" "posts" -}}
 {{- $relatedPool = where $relatedPool "RelPermalink" "ne" .RelPermalink -}}
 {{- $relatedByTags := slice -}}
 {{- with .Params.tags -}}
   {{- $relatedByTags = where $relatedPool "Params.tags" "intersect" . -}}
 {{- end -}}
-{{- $relatedCandidates := $relatedPool -}}
-{{- if gt (len $relatedByTags) 0 -}}
-  {{- $relatedCandidates = $relatedByTags -}}
-{{- end -}}
-{{- $relatedPosts := first 3 $relatedCandidates -}}
+{{- $relatedPosts := first 3 (cond (gt (len $relatedByTags) 0) $relatedByTags $relatedPool) -}}
 
-<article class="post-single qx-post-single" data-post-id="{{ .RelPermalink }}" data-post-title="{{ .Title }}">
-  <div class="qx-reading-progress" role="progressbar" aria-label="Tiến trình đọc bài" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-    <span class="qx-reading-progress-fill"></span>
-    <span class="qx-reading-progress-markers" aria-hidden="true"></span>
-  </div>
+<article class="qx-d-grid qx-gap-8">
+  <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+    {{- partial "breadcrumbs.html" . }}
 
-  <header class="post-header qx-post-header">
-    {{ partial "breadcrumbs.html" . }}
-    {{- with .Params.kicker }}
-    <p class="qx-post-kicker">{{ . }}</p>
-    {{- end }}
-    <h1 class="post-title entry-hint-parent">
-      {{- if gt (len $headlineBreaks) 0 -}}
-        {{- range $headlineBreaks -}}
-        <span class="qx-post-title-line">{{ . }}</span>
-        {{- end -}}
-      {{- else -}}
-        {{ .Title }}
-      {{- end -}}
-      {{- if .Draft }}
-      <span class="entry-hint" title="Draft">
-        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
-          <path
-            d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
-        </svg>
-      </span>
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      {{- with .Params.kicker }}
+      <span class="qx-badge-blue">{{ . }}</span>
       {{- end }}
-    </h1>
-    {{- if .Description }}
-    <div class="post-description">
-      {{ .Description }}
+      {{- range $headerBadges }}
+      <span class="qx-badge-soft-yellow">{{ . }}</span>
+      {{- end }}
+      {{- with index (.Params.categories | default (slice)) 0 }}
+      <span class="qx-badge-soft-blue">{{ . }}</span>
+      {{- end }}
     </div>
+
+    <div class="qx-d-grid qx-gap-3">
+      <h1>{{ .Title }}</h1>
+      {{- with .Description }}
+      <p>{{ . }}</p>
+      {{- end }}
+    </div>
+
+    <div class="qx-d-flex qx-flex-wrap qx-items-center qx-gap-3">
+      {{- partial "post_meta.html" . }}
+    </div>
+
+    {{- with .Params.cover.image }}
+    <figure class="qx-d-grid qx-gap-2">
+      <img src="{{ . | relURL }}" alt="{{ $.Params.cover.alt | default $.Title }}" loading="eager">
+      {{- with $.Params.cover.caption }}
+      <figcaption class="qx-text-muted">{{ . }}</figcaption>
+      {{- end }}
+    </figure>
     {{- end }}
-    {{- if not (.Param "hideMeta") }}
-    <div class="post-meta">
-      {{- partial "post_meta.html" . -}}
-      {{- partial "translation_list.html" . -}}
-      {{- partial "edit_post.html" . -}}
-      {{- partial "post_canonical.html" . -}}
-    </div>
-    {{- end }}
-    {{- if gt (len $headerBadges) 0 -}}
-    <div class="qx-post-badges" aria-label="Điểm nhấn bài viết">
-      {{- range $headerBadges -}}
-      <span class="qx-post-badge">{{ . }}</span>
-      {{- end -}}
-    </div>
-    {{- end -}}
   </header>
 
-  {{- if gt (len $tldrItems) 0 -}}
-  <section class="qx-post-tldr" aria-label="Tóm tắt nhanh bài viết">
-    <h2>TL;DR</h2>
-    <ul>
-      {{- range first 5 $tldrItems -}}
-      <li>{{ . }}</li>
-      {{- end -}}
-    </ul>
-  </section>
-  {{- end -}}
-
-  {{- if gt (len $focusPoints) 0 -}}
-  <section class="qx-post-focus" aria-label="Các trục chính của bài viết">
-    <div class="qx-post-focus-head">
-      <p class="qx-post-focus-kicker">Bản đồ bài viết</p>
-      <h2>Ba điểm chính cần giữ trong đầu khi đọc</h2>
-    </div>
-    <div class="qx-post-focus-grid">
-      {{- range $focusPoints -}}
-      <article class="qx-post-focus-card">
-        <h3>{{ .title }}</h3>
-        <p>{{ .body }}</p>
-      </article>
-      {{- end -}}
-    </div>
-  </section>
-  {{- end -}}
-
-  {{- $isHidden := (.Param "cover.hiddenInSingle") | default (.Param "cover.hidden") | default false }}
-  {{- partial "cover.html" (dict "cxt" . "IsSingle" true "isHidden" $isHidden) }}
-  {{- if and (.Param "ShowToc") $hasToc }}
-  <div class="qx-desktop-toc">
+  {{- if and (.Param "ShowToc") (gt (len (findRE `<a ` .TableOfContents 1)) 0) }}
+  <aside class="qx-card qx-p-6 qx-d-grid qx-gap-3">
+    <h2>Mục lục</h2>
     {{- partial "toc.html" . }}
-  </div>
-  {{- end }}
-
-  {{- if .Content }}
-  <div class="post-content qx-post-content" id="qx-post-content">
-    {{- if not (.Param "disableAnchoredHeadings") }}
-    {{- partial "anchored_headings.html" .Content -}}
-    {{- else }}{{ .Content }}{{ end }}
-  </div>
-  {{- end }}
-
-  {{- if gt (len $relatedPosts) 0 -}}
-  <aside class="qx-inline-related" id="qx-inline-related" aria-label="Bài liên quan cùng chủ đề">
-    <h3>Đọc tiếp theo chủ đề này</h3>
-    <div class="qx-inline-related-grid">
-      {{- range $relatedPosts -}}
-      <article class="qx-inline-related-card">
-        <p class="qx-inline-related-meta">{{ .Date | time.Format "02 Jan 2006" }} • {{ .ReadingTime }} phút</p>
-        <h4><a href="{{ .RelPermalink }}">{{ .Title }}</a></h4>
-      </article>
-      {{- end -}}
-    </div>
   </aside>
-  {{- end -}}
+  {{- end }}
 
-  <footer class="post-footer qx-post-footer">
-    {{- $tags := .Language.Params.Taxonomies.tag | default "tags" }}
-    <ul class="post-tags">
-      {{- range ($.GetTerms $tags) }}
-      <li><a href="{{ .Permalink }}">{{ .LinkTitle }}</a></li>
-      {{- end }}
-    </ul>
-
-    {{- with $seriesPreview -}}
-    <section class="qx-series-preview" aria-label="Tiếp theo trong series">
-      {{- with .kicker -}}
-      <p class="qx-series-preview-kicker">{{ . }}</p>
-      {{- end -}}
-      {{- with .title -}}
-      <h3>{{ . }}</h3>
-      {{- end -}}
-      {{- with .body -}}
-      <p class="qx-series-preview-body">{{ . }}</p>
-      {{- end -}}
-      <div class="qx-series-preview-actions">
-        {{- with .primaryUrl -}}
-        <a class="qx-series-preview-primary" href="{{ . | relLangURL }}">{{ $seriesPreview.primaryLabel | default "Xem thêm" }}</a>
-        {{- end -}}
-        {{- with .secondaryUrl -}}
-        <a class="qx-series-preview-secondary" href="{{ . | relLangURL }}">{{ $seriesPreview.secondaryLabel | default "Khám phá" }}</a>
-        {{- end -}}
-      </div>
-    </section>
-    {{- end -}}
-
-    <section class="qx-post-end-cta" aria-label="Đọc bài tiếp theo">
-      <div class="qx-next-primary">
-        <p class="qx-end-kicker">Đọc tiếp</p>
-        {{- with $nextPost -}}
-        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
-        <p>{{ .Summary | plainify | truncate 130 }}</p>
+  <section class="qx-container-prose">
+    <div class="qx-card qx-p-8 qx-d-grid qx-gap-6 qx-shadow-sm">
+      {{- if .Content }}
+      <div class="qx-prose">
+        {{- if and (not (.Param "disableAnchoredHeadings")) (templates.Exists "partials/anchored_headings.html") -}}
+          {{- partial "anchored_headings.html" .Content -}}
         {{- else -}}
-        <h3><a href="{{ "/posts/" | relLangURL }}">Xem toàn bộ bài viết</a></h3>
-        <p>Bạn đã đến bài mới nhất. Khám phá thêm các chủ đề khác trong mục Bài viết.</p>
+          {{- .Content -}}
         {{- end -}}
       </div>
+      {{- end }}
+    </div>
+  </section>
 
-      <div class="qx-end-secondary">
-        <a class="qx-follow-rss" href="{{ "/index.xml" | relLangURL }}">Theo dõi RSS bài mới</a>
-      </div>
-    </section>
+  {{- $tagTerms := $.GetTerms (.Language.Params.Taxonomies.tag | default "tags") -}}
+  {{- if gt (len $tagTerms) 0 }}
+  <section class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm" aria-labelledby="post-topics-title">
+    <h2 id="post-topics-title">Chủ đề của bài viết</h2>
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      {{- range $tagTerms }}
+      <a class="qx-badge-soft-green" href="{{ .Permalink }}">{{ .LinkTitle }}</a>
+      {{- end }}
+    </div>
+  </section>
+  {{- end }}
 
-    {{- if (and site.Params.ShowShareButtons (ne .Params.disableShare true)) }}
+  {{- if and site.Params.ShowShareButtons (ne .Params.disableShare true) }}
+  <section class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm" aria-labelledby="post-share-title">
+    <h2 id="post-share-title">Chia sẻ bài viết</h2>
+    <p class="qx-text-muted">Gửi bài này cho người đang cần đúng chủ đề, hoặc lưu lại để quay về sau.</p>
     {{- partial "share_icons.html" . -}}
+  </section>
+  {{- end }}
+
+  {{- if gt (len $relatedPosts) 0 }}
+  <section class="qx-d-grid qx-gap-4" aria-labelledby="related-posts-title">
+    <div class="qx-flex-between qx-gap-3">
+      <div>
+        <p class="qx-text-muted">Đọc tiếp</p>
+        <h2 id="related-posts-title">Bài liên quan</h2>
+      </div>
+      <a class="qx-btn qx-btn-ghost" href="{{ "/posts/" | relLangURL }}">Tất cả bài viết</a>
+    </div>
+    <div class="qx-grid-3 qx-gap-6">
+      {{- range $relatedPosts }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+        <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+          {{- with index (.Params.categories | default (slice)) 0 }}
+          <span class="qx-badge-soft-blue">{{ . }}</span>
+          {{- else }}
+          <span class="qx-badge-soft-blue">Post</span>
+          {{- end }}
+        </div>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Summary | plainify | truncate 140 }}</p>
+        <div class="qx-d-flex qx-flex-wrap qx-items-center qx-gap-3">
+          <span class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</span>
+          <a class="qx-btn qx-btn-ghost" href="{{ .RelPermalink }}">Đọc tiếp</a>
+        </div>
+      </article>
+      {{- end }}
+    </div>
+  </section>
+  {{- end }}
+
+  <section class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm" aria-labelledby="next-post-title">
+    <p class="qx-text-muted">Tiếp theo</p>
+    <h2 id="next-post-title">Gợi ý bài tiếp theo</h2>
+    {{- with $nextPost }}
+    <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    <p>{{ .Summary | plainify | truncate 160 }}</p>
+    <a class="qx-btn qx-btn-primary" href="{{ .RelPermalink }}">Mở bài tiếp theo</a>
+    {{- else }}
+    <p>Bạn đang ở bài mới nhất. Hãy khám phá kho bài viết để xem các chủ đề khác.</p>
+    <a class="qx-btn qx-btn-primary" href="{{ "/posts/" | relLangURL }}">Xem tất cả bài viết</a>
     {{- end }}
-  </footer>
+  </section>
 
   {{- if (.Param "comments") }}
-  {{- partial "comments.html" . }}
+  <section class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm" aria-labelledby="discussion-title">
+    <h2 id="discussion-title">Thảo luận</h2>
+    {{- partial "comments.html" . }}
+  </section>
   {{- end }}
 </article>
-
-<div class="qx-mobile-tools" id="qx-mobile-tools">
-  <nav class="qx-mobile-actionbar" id="qx-mobile-actionbar" aria-label="Tác vụ đọc nhanh">
-    <button class="qx-mobile-action" type="button" id="qx-action-toc" aria-expanded="false" {{ if not (and (.Param "ShowToc") $hasToc) }}disabled{{ end }}>Mục lục</button>
-    <button class="qx-mobile-action" type="button" id="qx-action-save" aria-pressed="false">Lưu</button>
-    <button class="qx-mobile-action" type="button" id="qx-action-share">Chia sẻ</button>
-  </nav>
-
-  {{- if and (.Param "ShowToc") $hasToc -}}
-  <div class="qx-post-mobile-sheet" id="qx-post-mobile-sheet" hidden>
-    <button class="qx-post-mobile-sheet-overlay" type="button" id="qx-post-mobile-sheet-overlay" aria-label="Đóng mục lục" tabindex="-1" aria-hidden="true"></button>
-    <section class="qx-post-mobile-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="qx-post-mobile-sheet-title">
-      <header class="qx-post-mobile-sheet-head">
-        <h3 id="qx-post-mobile-sheet-title">Mục lục bài viết</h3>
-        <button class="qx-post-mobile-sheet-close" type="button" id="qx-post-mobile-sheet-close">Đóng</button>
-      </header>
-      <div class="qx-post-mobile-sheet-body">
-        {{ .TableOfContents }}
-      </div>
-    </section>
-  </div>
-  {{- end -}}
-</div>
-
-<script>
-(() => {
-  const article = document.querySelector('.qx-post-single');
-  if (!article) return;
-
-  const content = article.querySelector('#qx-post-content');
-  const progress = article.querySelector('.qx-reading-progress');
-  const fill = article.querySelector('.qx-reading-progress-fill');
-  const related = article.querySelector('#qx-inline-related');
-  const actionToc = document.querySelector('#qx-action-toc');
-  const actionSave = document.querySelector('#qx-action-save');
-  const actionShare = document.querySelector('#qx-action-share');
-  const mobileSheet = document.querySelector('#qx-post-mobile-sheet');
-  const mobileSheetOverlay = document.querySelector('#qx-post-mobile-sheet-overlay');
-  const mobileSheetClose = document.querySelector('#qx-post-mobile-sheet-close');
-  const progressMarkers = article.querySelector('.qx-reading-progress-markers');
-  const bookmarkStorageKey = 'qx:saved-posts:v1';
-  const postId = article.dataset.postId || '';
-  const postTitle = article.dataset.postTitle || document.title;
-  const focusableSelector = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
-  const tocLinkSelector = '.qx-desktop-toc a[href^="#"], .qx-post-mobile-sheet-body a[href^="#"]';
-  let lastFocusedElement = null;
-  let headings = [];
-  let progressHeadingMarkers = [];
-  let lightbox = null;
-  let lightboxImage = null;
-  let lightboxCaption = null;
-  const savedPosts = (() => {
-    try {
-      const raw = window.localStorage.getItem(bookmarkStorageKey);
-      if (!raw) return new Set();
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return new Set();
-      return new Set(parsed.filter((value) => typeof value === 'string'));
-    } catch (error) {
-      return new Set();
-    }
-  })();
-
-  const resolveHeadingIdFromHash = (hash) => {
-    if (!hash || hash.charAt(0) !== '#') return '';
-    const rawId = hash.slice(1);
-    if (!rawId) return '';
-
-    try {
-      return decodeURIComponent(rawId);
-    } catch (error) {
-      return rawId;
-    }
-  };
-
-  const setActiveTocById = (id) => {
-    const tocLinks = Array.from(article.querySelectorAll(tocLinkSelector));
-    tocLinks.forEach((link) => {
-      const targetId = resolveHeadingIdFromHash(link.getAttribute('href') || '');
-      link.classList.toggle('is-active', Boolean(id) && targetId === id);
-    });
-  };
-
-  const updateActiveHeadingByScroll = (scrollY) => {
-    if (headings.length === 0) return;
-
-    const anchorLine = scrollY + 140;
-    let activeHeading = headings[0];
-
-    headings.forEach((heading) => {
-      const headingTop = heading.getBoundingClientRect().top + window.scrollY;
-      if (headingTop <= anchorLine) {
-        activeHeading = heading;
-      }
-    });
-
-    setActiveTocById(activeHeading.id || '');
-  };
-
-  const buildProgressMarkers = () => {
-    progressHeadingMarkers = [];
-    if (!progressMarkers) return;
-    progressMarkers.innerHTML = '';
-    if (headings.length === 0) return;
-
-    const fragment = document.createDocumentFragment();
-    headings.forEach((heading) => {
-      const marker = document.createElement('span');
-      marker.className = 'qx-reading-marker';
-      marker.dataset.headingId = heading.id || '';
-      fragment.appendChild(marker);
-      progressHeadingMarkers.push({ heading, marker });
-    });
-
-    progressMarkers.appendChild(fragment);
-  };
-
-  const updateProgressMarkers = (start, end, scrollY) => {
-    if (progressHeadingMarkers.length === 0) return;
-
-    progressHeadingMarkers.forEach(({ heading, marker }) => {
-      const headingTop = heading.getBoundingClientRect().top + window.scrollY;
-      const headingRatio = Math.min(Math.max((headingTop - start) / (end - start), 0), 1);
-      marker.style.left = `${headingRatio * 100}%`;
-      marker.classList.toggle('is-passed', scrollY + 120 >= headingTop);
-    });
-  };
-
-  const ensureLightbox = () => {
-    if (lightbox) return;
-
-    const element = document.createElement('div');
-    element.className = 'qx-lightbox';
-    element.hidden = true;
-    element.innerHTML = `
-      <button class="qx-lightbox-backdrop" type="button" aria-label="Đóng ảnh phóng to"></button>
-      <figure class="qx-lightbox-figure">
-        <img class="qx-lightbox-image" alt="">
-        <figcaption class="qx-lightbox-caption"></figcaption>
-      </figure>
-      <button class="qx-lightbox-close" type="button" aria-label="Đóng">Đóng</button>
-    `;
-
-    document.body.appendChild(element);
-    lightbox = element;
-    lightboxImage = element.querySelector('.qx-lightbox-image');
-    lightboxCaption = element.querySelector('.qx-lightbox-caption');
-
-    const closeLightbox = () => {
-      if (!lightbox || lightbox.hidden) return;
-      document.body.classList.remove('qx-lightbox-open');
-      lightbox.classList.remove('is-open');
-
-      const done = () => {
-        if (!lightbox || lightbox.classList.contains('is-open')) return;
-        lightbox.hidden = true;
-      };
-
-      lightbox.addEventListener('transitionend', done, { once: true });
-      window.setTimeout(done, 260);
-    };
-
-    element.querySelector('.qx-lightbox-backdrop')?.addEventListener('click', closeLightbox);
-    element.querySelector('.qx-lightbox-close')?.addEventListener('click', closeLightbox);
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        closeLightbox();
-      }
-    });
-  };
-
-  const openLightbox = (img) => {
-    ensureLightbox();
-    if (!lightbox || !lightboxImage || !img) return;
-
-    lightboxImage.src = img.currentSrc || img.src;
-    lightboxImage.alt = img.alt || '';
-    if (lightboxCaption) {
-      lightboxCaption.textContent = img.alt || '';
-      lightboxCaption.hidden = !img.alt;
-    }
-
-    lightbox.hidden = false;
-    document.body.classList.add('qx-lightbox-open');
-    window.requestAnimationFrame(() => lightbox.classList.add('is-open'));
-  };
-
-  const enhanceImages = () => {
-    if (!content) return;
-
-    const images = Array.from(content.querySelectorAll('img'));
-    images.forEach((img) => {
-      if (img.dataset.qxLightboxReady === 'true') return;
-      img.dataset.qxLightboxReady = 'true';
-      img.classList.add('qx-lightbox-trigger');
-
-      img.addEventListener('click', (event) => {
-        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-        event.preventDefault();
-        openLightbox(img);
-      });
-    });
-  };
-
-  const hydrateReadingSections = () => {
-    if (!content) return;
-
-    headings = Array.from(content.querySelectorAll('h2[id], h3[id]'));
-    buildProgressMarkers();
-    enhanceImages();
-  };
-
-  const placeInlineRelated = () => {
-    if (!content || !related) return;
-
-    const candidates = Array.from(content.children).filter((node) => {
-      if (!(node instanceof HTMLElement)) return false;
-      const tag = node.tagName;
-      return tag === 'P' || tag === 'UL' || tag === 'OL' || tag === 'PRE' || tag === 'BLOCKQUOTE';
-    });
-
-    if (candidates.length < 4) return;
-
-    const targetIndex = Math.max(1, Math.min(candidates.length - 1, Math.floor(candidates.length * 0.35)));
-    candidates[targetIndex].insertAdjacentElement('afterend', related);
-  };
-
-  const updateProgress = () => {
-    if (!content || !progress || !fill) return;
-
-    const scrollY = window.scrollY || document.documentElement.scrollTop;
-    const contentTop = content.getBoundingClientRect().top + window.scrollY;
-    const articleBottom = article.getBoundingClientRect().bottom + window.scrollY;
-
-    const start = contentTop - 96;
-    const end = Math.max(start + 1, articleBottom - window.innerHeight);
-    const ratio = Math.min(Math.max((scrollY - start) / (end - start), 0), 1);
-
-    fill.style.transform = `scaleX(${ratio})`;
-    progress.setAttribute('aria-valuenow', String(Math.round(ratio * 100)));
-    updateProgressMarkers(start, end, scrollY);
-    updateActiveHeadingByScroll(scrollY);
-  };
-
-  const syncSaveState = () => {
-    if (!actionSave || !postId) return;
-    const isSaved = savedPosts.has(postId);
-    actionSave.setAttribute('aria-pressed', isSaved ? 'true' : 'false');
-    actionSave.textContent = isSaved ? 'Đã lưu' : 'Lưu';
-  };
-
-  const persistSavedPosts = () => {
-    try {
-      window.localStorage.setItem(bookmarkStorageKey, JSON.stringify(Array.from(savedPosts)));
-    } catch (error) {
-      // Ignore storage failures.
-    }
-  };
-
-  const openMobileSheet = () => {
-    if (!mobileSheet) return;
-    lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    mobileSheet.hidden = false;
-    window.requestAnimationFrame(() => mobileSheet.classList.add('is-open'));
-    document.body.classList.add('qx-post-sheet-open');
-    if (actionToc) {
-      actionToc.setAttribute('aria-expanded', 'true');
-    }
-
-    const focusables = Array.from(mobileSheet.querySelectorAll(focusableSelector)).filter((node) => node instanceof HTMLElement);
-    const initialTarget = (mobileSheetClose && !mobileSheetClose.disabled) ? mobileSheetClose : focusables[0];
-    if (initialTarget instanceof HTMLElement) {
-      window.requestAnimationFrame(() => initialTarget.focus());
-    }
-  };
-
-  const closeMobileSheet = () => {
-    document.body.classList.remove('qx-post-sheet-open');
-    if (actionToc) {
-      actionToc.setAttribute('aria-expanded', 'false');
-    }
-    if (!mobileSheet || mobileSheet.hidden) return;
-    mobileSheet.classList.remove('is-open');
-
-    let done = false;
-    const onDone = () => {
-      if (done || mobileSheet.classList.contains('is-open')) return;
-      done = true;
-      mobileSheet.hidden = true;
-      mobileSheet.removeEventListener('transitionend', onDone);
-      if (lastFocusedElement && document.contains(lastFocusedElement)) {
-        lastFocusedElement.focus();
-      } else if (actionToc && !actionToc.disabled) {
-        actionToc.focus();
-      }
-      lastFocusedElement = null;
-    };
-
-    mobileSheet.addEventListener('transitionend', onDone);
-    window.setTimeout(onDone, 320);
-  };
-
-  const flashActionLabel = (button, text) => {
-    if (!button) return;
-    const prev = button.textContent;
-    button.textContent = text;
-    window.setTimeout(() => {
-      button.textContent = prev || '';
-      syncSaveState();
-    }, 1400);
-  };
-
-  let ticking = false;
-  const onScrollOrResize = () => {
-    if (ticking) return;
-    ticking = true;
-    window.requestAnimationFrame(() => {
-      updateProgress();
-      ticking = false;
-    });
-  };
-
-  placeInlineRelated();
-  hydrateReadingSections();
-  updateProgress();
-  syncSaveState();
-
-  window.addEventListener('scroll', onScrollOrResize, { passive: true });
-  window.addEventListener('resize', onScrollOrResize, { passive: true });
-
-  if (actionToc && mobileSheet) {
-    actionToc.addEventListener('click', openMobileSheet);
-  }
-
-  if (mobileSheetOverlay) {
-    mobileSheetOverlay.addEventListener('click', closeMobileSheet);
-  }
-
-  if (mobileSheetClose) {
-    mobileSheetClose.addEventListener('click', closeMobileSheet);
-  }
-
-  if (mobileSheet) {
-    mobileSheet.addEventListener('click', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      if (target.closest('.qx-post-mobile-sheet-body a')) {
-        closeMobileSheet();
-      }
-    });
-  }
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeMobileSheet();
-      return;
-    }
-
-    if (event.key !== 'Tab' || !mobileSheet || mobileSheet.hidden || !mobileSheet.classList.contains('is-open')) return;
-
-    const focusables = Array.from(mobileSheet.querySelectorAll(focusableSelector)).filter((node) => {
-      return (
-        node instanceof HTMLElement &&
-        !node.hasAttribute('disabled') &&
-        !node.hidden &&
-        node.getAttribute('aria-hidden') !== 'true' &&
-        node.tabIndex > -1
-      );
-    });
-
-    if (focusables.length === 0) {
-      event.preventDefault();
-      return;
-    }
-
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-
-    if (event.shiftKey) {
-      if (active === first || !mobileSheet.contains(active)) {
-        event.preventDefault();
-        last.focus();
-      }
-      return;
-    }
-
-    if (active === last || !mobileSheet.contains(active)) {
-      event.preventDefault();
-      first.focus();
-    }
-  });
-
-  if (actionSave) {
-    actionSave.addEventListener('click', () => {
-      if (!postId) return;
-
-      if (savedPosts.has(postId)) {
-        savedPosts.delete(postId);
-      } else {
-        savedPosts.add(postId);
-      }
-
-      persistSavedPosts();
-      syncSaveState();
-    });
-  }
-
-  if (actionShare) {
-    actionShare.addEventListener('click', async () => {
-      const shareUrl = window.location.href;
-      const payload = { title: postTitle, url: shareUrl };
-
-      if (navigator.share) {
-        try {
-          await navigator.share(payload);
-          return;
-        } catch (error) {
-          if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
-            return;
-          }
-          // Fall through to clipboard if share fails unexpectedly.
-        }
-      }
-
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        flashActionLabel(actionShare, 'Đã copy link');
-      } catch (error) {
-        flashActionLabel(actionShare, 'Không thể copy');
-      }
-    });
-  }
-
-})();
-</script>
-
-{{- end }}{{/* end main */}}
+{{- end -}}

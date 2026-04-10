@@ -1,0 +1,15 @@
+{{- if .IsTranslated -}}
+<ul class="qx-post-meta-translations">
+  {{- range .Translations -}}
+  <li>
+    <a href="{{ .Permalink }}">
+      {{- if and site.Params.displayFullLangName (.Language.LanguageName) -}}
+      {{ .Language.LanguageName | emojify }}
+      {{- else -}}
+      {{ .Lang | title }}
+      {{- end -}}
+    </a>
+  </li>
+  {{- end -}}
+</ul>
+{{- end -}}

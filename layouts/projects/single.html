@@ -1,0 +1,39 @@
+{{- define "main" -}}
+<article class="qx-d-grid qx-gap-8">
+  <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+    {{- partial "breadcrumbs.html" . }}
+
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      <span class="qx-badge-green">Project</span>
+      {{- with index (.Params.categories | default (slice)) 0 }}
+      <span class="qx-badge-soft-green">{{ . }}</span>
+      {{- end }}
+      {{- range first 2 (.Params.tags | default (slice)) }}
+      <span class="qx-badge-soft-blue">{{ . }}</span>
+      {{- end }}
+    </div>
+
+    <div class="qx-d-grid qx-gap-3">
+      <h1>{{ .Title }}</h1>
+      {{- with .Description }}
+      <p>{{ . }}</p>
+      {{- else }}
+      <p>{{ .Summary }}</p>
+      {{- end }}
+    </div>
+
+    <div class="qx-d-flex qx-flex-wrap qx-gap-3">
+      <span class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</span>
+    </div>
+  </header>
+
+  <section class="qx-container-prose">
+    <div class="qx-card qx-p-8 qx-d-grid qx-gap-6 qx-shadow-sm">
+      {{- with (.Param "cover.image" | default .Params.image) }}
+      <img src="{{ . | relURL }}" alt="{{ $.Title }}" class="qx-w-full qx-rounded-lg" loading="lazy" decoding="async">
+      {{- end }}
+      {{ .Content }}
+    </div>
+  </section>
+</article>
+{{- end -}}

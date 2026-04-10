@@ -1,0 +1,14 @@
+{{- if not .Date.IsZero -}}
+<span class="qx-text-muted" title="{{ .Date }}">{{ .Date | time.Format (default ":date_long" site.Params.DateFormat) }}</span>
+{{- end -}}
+{{- if (.Param "ShowReadingTime") -}}
+<span class="qx-text-muted">{{ i18n "read_time" .ReadingTime | default (printf "%d min" .ReadingTime) }}</span>
+{{- end -}}
+{{- if (.Param "ShowWordCount") -}}
+<span class="qx-text-muted">{{ i18n "words" .WordCount | default (printf "%d words" .WordCount) }}</span>
+{{- end -}}
+{{- if not (.Param "hideAuthor") -}}
+  {{- with (partial "author.html" .) -}}
+  <span class="qx-text-muted">{{ . }}</span>
+  {{- end -}}
+{{- end -}}

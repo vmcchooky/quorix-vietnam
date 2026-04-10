@@ -1,0 +1,7 @@
+{{- if and (.Params.canonicalURL) (.Params.ShowCanonicalLink) -}}
+{{- $url := urls.Parse .Params.canonicalURL -}}
+<span class="qx-text-muted">
+  {{- (site.Params.CanonicalLinkText | default .Params.CanonicalLinkText) | default "Originally published at" -}}
+  <a href="{{ trim .Params.canonicalURL " " }}" title="{{ trim .Params.canonicalURL " " }}" target="_blank" rel="noopener noreferrer">{{ $url.Host }}</a>
+</span>
+{{- end -}}

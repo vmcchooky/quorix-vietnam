@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Database on Quorix Việt Nam</title>
+    <link>https://quorix.io.vn/tags/database/</link>
+    <description>Recent content in Database on Quorix Việt Nam</description>
+    <generator>Hugo</generator>
+    <language>vi</language>
+    <lastBuildDate>Sun, 29 Mar 2026 10:00:00 +0700</lastBuildDate>
+    <atom:link href="https://quorix.io.vn/tags/database/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Tổ chức thư mục internal/database trong Go</title>
+      <link>https://quorix.io.vn/posts/golang-directory-structure/</link>
+      <pubDate>Sun, 29 Mar 2026 10:00:00 +0700</pubDate>
+      <guid>https://quorix.io.vn/posts/golang-directory-structure/</guid>
+      <description>&lt;p&gt;Khi mã nguồn Go phình to, việc đóng gói logic truy xuất dữ liệu là cần thiết. Khác với các ngôn ngữ khác, Go sử dụng thư mục &lt;code&gt;internal/&lt;/code&gt; để ngăn chặn các package bên ngoài import ngược code của dự án.&lt;/p&gt;
+&lt;h2 id=&#34;1-vì-sao-internal-quan-trọng&#34;&gt;1. Vì sao &lt;code&gt;internal/&lt;/code&gt; quan trọng?&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Giúp ràng buộc phạm vi sử dụng package chỉ trong cùng module.&lt;/li&gt;
+&lt;li&gt;Giảm rủi ro lộ API nội bộ và phụ thuộc chéo khó kiểm soát.&lt;/li&gt;
+&lt;li&gt;Tăng tính maintainable khi team mở rộng và codebase lớn dần.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Với backend thực chiến, cấu trúc rõ ràng ngay từ đầu sẽ giảm chi phí refactor về sau.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

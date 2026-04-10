@@ -1,24 +1,113 @@
 {{ define "main" }}
-<section class="qx-project-shell">
-  <header class="qx-project-head">
-    <p class="qx-kicker">PROJECT HUB</p>
-    <h1>{{ .Title }}</h1>
-    {{ with .Description }}<p>{{ . }}</p>{{ end }}
+{{- $projects := .Pages.ByDate.Reverse -}}
+{{- $projectTags := slice -}}
+{{- range $projects -}}
+  {{- range (.Params.tags | default (slice)) -}}
+    {{- $projectTags = $projectTags | append . -}}
+  {{- end -}}
+{{- end -}}
+{{- $projectTags = uniq $projectTags -}}
+
+<section class="qx-d-grid qx-gap-8">
+  <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+    {{- partial "breadcrumbs.html" . }}
+
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      <span class="qx-badge-green">Projects</span>
+      <span class="qx-badge-soft-green">Network</span>
+      <span class="qx-badge-soft-blue">Security</span>
+      <span class="qx-badge-soft-yellow">Golang</span>
+    </div>
+
+    <div class="qx-d-grid qx-gap-3">
+      <h1>{{ .Title }}</h1>
+      <p>{{ .Description | default "Không gian lưu trữ các dự án cá nhân về mạng, bảo mật và Golang của Quorix Việt Nam." }}</p>
+    </div>
   </header>
 
-  <div class="qx-grid qx-grid-projects">
-    {{ range .Pages.ByDate.Reverse }}
-    <article class="qx-card qx-card-project">
-      <p class="qx-chip">{{ .Date | time.Format ":date_long" }}</p>
-      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-      <p>{{ .Summary | plainify | truncate 150 }}</p>
+  {{- with index $projects 0 }}
+  <section class="qx-grid-2 qx-gap-6" aria-labelledby="featured-project-title">
+    <article class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-md">
+      <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+        <span class="qx-badge-green">Nổi bật</span>
+        {{- with index (.Params.tags | default (slice)) 0 }}
+        <span class="qx-badge-soft-green">{{ . }}</span>
+        {{- end }}
+      </div>
+      <div class="qx-d-grid qx-gap-3">
+        <p class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</p>
+        <h2 id="featured-project-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+        <p>{{ .Summary | plainify | truncate 220 }}</p>
+      </div>
+      <div class="qx-d-flex qx-flex-wrap qx-gap-3">
+        <a class="qx-btn qx-btn-primary" href="{{ .RelPermalink }}">Xem dự án</a>
+        <a class="qx-btn qx-btn-ghost" href="{{ "/posts/" | relLangURL }}">Đọc thêm bài liên quan</a>
+      </div>
     </article>
-    {{ else }}
-    <article class="qx-card qx-card-empty">
-      <h2>Chưa có dự án</h2>
-      <p>Tạo thêm nội dung trong thư mục content/projects để hiển thị danh sách tại đây.</p>
-    </article>
-    {{ end }}
-  </div>
+
+    <aside class="qx-callout-success qx-p-6 qx-d-grid qx-gap-3">
+      <h2>Quorix xây dự án như thế nào?</h2>
+      <p>Mỗi dự án được xem như một lát cắt của năng lực hệ thống: từ phân tích bài toán, thiết kế luồng dữ liệu đến cách triển khai backend và quan sát vận hành.</p>
+      <a class="qx-btn qx-btn-outline" href="{{ "/services/" | relLangURL }}">Xem dịch vụ liên quan</a>
+    </aside>
+  </section>
+  {{- end }}
+
+  {{- if gt (len $projectTags) 0 }}
+  <section class="qx-card qx-p-6 qx-d-grid qx-gap-4 qx-shadow-sm" aria-labelledby="projects-filters-title">
+    <div class="qx-d-grid qx-gap-2">
+      <h2 id="projects-filters-title">Lọc theo taxonomy</h2>
+      <p class="qx-text-muted">Các chip lọc dẫn tới taxonomy archive tương ứng để giữ giao diện đúng với bộ API Quorix UI hiện có, thay vì thêm filter JavaScript riêng.</p>
+    </div>
+
+    {{- if gt (len $projectTags) 0 }}
+    <div class="qx-d-grid qx-gap-2">
+      <p class="qx-text-muted">Công nghệ và chủ đề</p>
+      <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+        {{- range $projectTags }}
+        {{- $tag := . -}}
+        {{- with site.GetPage (printf "/tags/%s" ($tag | urlize)) }}
+        <a class="qx-btn qx-btn-ghost" href="{{ .RelPermalink }}">{{ $tag }}</a>
+        {{- end }}
+        {{- end }}
+      </div>
+    </div>
+    {{- end }}
+  </section>
+  {{- end }}
+
+  <section class="qx-d-grid qx-gap-4" aria-labelledby="projects-grid-title">
+    <div class="qx-flex-between qx-gap-3">
+      <div>
+        <p class="qx-text-muted">{{ len $projects }} dự án</p>
+        <h2 id="projects-grid-title">Danh sách dự án</h2>
+      </div>
+    </div>
+
+    <div class="qx-grid-3 qx-gap-6">
+      {{ range $projects }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+        {{- with (.Param "cover.image" | default .Params.image) }}
+        <img src="{{ . | relURL }}" alt="{{ $.Title }}" class="qx-w-full qx-rounded-lg" loading="lazy" decoding="async">
+        {{- end }}
+        <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+          <span class="qx-badge-green">Project</span>
+          {{- range first 2 (.Params.tags | default (slice)) }}
+          <span class="qx-badge-soft-green">{{ . }}</span>
+          {{- end }}
+        </div>
+        <p class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</p>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Summary | plainify | truncate 160 }}</p>
+        <a class="qx-btn qx-btn-outline" href="{{ .RelPermalink }}">Mở chi tiết</a>
+      </article>
+      {{ else }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3">
+        <h2>Chưa có dự án</h2>
+        <p class="qx-text-muted">Tạo thêm nội dung trong `content/projects` để hiển thị danh sách tại đây.</p>
+      </article>
+      {{ end }}
+    </div>
+  </section>
 </section>
 {{ end }}

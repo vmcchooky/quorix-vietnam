@@ -1,24 +1,72 @@
 {{ define "main" }}
-<section class="qx-project-shell">
-  <header class="qx-project-head">
-    <p class="qx-kicker">SERVICE HUB</p>
-    <h1>{{ .Title }}</h1>
-    {{ with .Description }}<p>{{ . }}</p>{{ end }}
+{{- $services := .RegularPages.ByDate.Reverse -}}
+
+<section class="qx-d-grid qx-gap-8">
+  <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+    {{- partial "breadcrumbs.html" . }}
+
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      <span class="qx-badge-red">Services</span>
+      <span class="qx-badge-soft-yellow">Frontend</span>
+      <span class="qx-badge-soft-blue">Design System</span>
+    </div>
+
+    <div class="qx-d-grid qx-gap-3">
+      <h1>{{ .Title }}</h1>
+      <p>{{ .Description | default "Không gian tổng hợp các dịch vụ và tài nguyên mà Quorix Việt Nam đang phát triển." }}</p>
+    </div>
   </header>
 
-  <div class="qx-grid qx-grid-projects">
-    {{ range .RegularPages.ByDate.Reverse }}
-    <article class="qx-card qx-card-project">
-      <p class="qx-chip">{{ .Date | time.Format ":date_long" }}</p>
-      <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-      <p>{{ .Summary | plainify | truncate 150 }}</p>
+  <section class="qx-grid-2 qx-gap-6" aria-labelledby="services-overview-title">
+    <article class="qx-callout-success qx-p-6 qx-d-grid qx-gap-3">
+      <h2 id="services-overview-title">Cách Quorix định nghĩa dịch vụ</h2>
+      <p>Dịch vụ ở đây không chỉ là phần “bán ra”, mà là những năng lực kỹ thuật có thể tái sử dụng, đóng gói và mở rộng thành nền tảng cho các sản phẩm sau này.</p>
+      <a class="qx-btn qx-btn-primary" href="{{ "/projects/" | relLangURL }}">Xem dự án liên quan</a>
     </article>
-    {{ else }}
-    <article class="qx-card qx-card-empty">
-      <h2>Chưa có dịch vụ</h2>
-      <p>Thêm nội dung trong thư mục content/services để hiển thị danh sách dịch vụ tại đây.</p>
+
+    <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+      <h2>Năng lực hiện tại</h2>
+      <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+        <span class="qx-badge-soft-yellow">UI Foundation</span>
+        <span class="qx-badge-soft-green">System Thinking</span>
+        <span class="qx-badge-soft-blue">Reusable Assets</span>
+      </div>
+      <p class="qx-text-muted">Các dịch vụ hiện tại tập trung vào lớp nền: component primitives, token hóa thiết kế và quy trình phát triển có thể dùng lại cho nhiều dự án.</p>
     </article>
-    {{ end }}
-  </div>
+  </section>
+
+  <section class="qx-d-grid qx-gap-4" aria-labelledby="services-grid-title">
+    <div class="qx-flex-between qx-gap-3">
+      <div>
+        <p class="qx-text-muted">{{ len $services }} dịch vụ</p>
+        <h2 id="services-grid-title">Danh sách dịch vụ</h2>
+      </div>
+    </div>
+
+    <div class="qx-grid-2 qx-gap-6">
+      {{ range $services }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+        {{- with (.Param "cover.image" | default .Params.image) }}
+        <img src="{{ . | relURL }}" alt="{{ $.Title }}" class="qx-w-full qx-rounded-lg" loading="lazy" decoding="async">
+        {{- end }}
+        <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+          <span class="qx-badge-red">Service</span>
+          {{- range first 2 (.Params.tags | default (slice)) }}
+          <span class="qx-badge-soft-yellow">{{ . }}</span>
+          {{- end }}
+        </div>
+        <p class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</p>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Description | default .Summary | plainify | truncate 170 }}</p>
+        <a class="qx-btn qx-btn-primary" href="{{ .RelPermalink }}">Tìm hiểu thêm</a>
+      </article>
+      {{ else }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3">
+        <h3>Chưa có dịch vụ</h3>
+        <p class="qx-text-muted">Thêm nội dung trong `content/services` để hiển thị danh sách dịch vụ tại đây.</p>
+      </article>
+      {{ end }}
+    </div>
+  </section>
 </section>
 {{ end }}
