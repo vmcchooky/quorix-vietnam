@@ -1,7 +1,7 @@
 {{- if not (.Param "hideFooter") }}
 <div class="qx-container qx-container-lg qx-py-8">
     <div id="site-footer-grid" class="qx-d-grid qx-gap-6">
-        <section id="footer-story" class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+        <section id="footer-story" class="qx-p-8 qx-d-grid qx-gap-4">
             <a href="{{ "" | absLangURL }}" class="qx-d-flex qx-items-center qx-gap-3">
                 {{- if site.Params.label.icon }}
                     {{- $img := resources.Get site.Params.label.icon }}
@@ -23,7 +23,7 @@
             </div>
         </section>
 
-        <section id="footer-contact" class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+        <section id="footer-contact" class="qx-p-8 qx-d-grid qx-gap-4">
             <div class="qx-d-grid qx-gap-2">
                 <p id="footer-contact-title"><strong>Thông tin</strong></p>
                 <p class="qx-text-muted">Các kênh liên hệ và cập nhật của Quorix Việt Nam.</p>
