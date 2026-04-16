@@ -1,5 +1,5 @@
 baseURL = "https://quorix.io.vn/"
-title = "Quorix Viet Nam"
+title = "Quorix Việt Nam"
 theme = "PaperMod"
 languageCode = "vi"
 defaultContentLanguage = "vi"
@@ -20,8 +20,8 @@ buildExpired = false
 
 [params]
   env = "production"
-  title = "Quorix Viet Nam"
-  description = "Portfolio và Blog chia sẻ kiến thức Hệ thống, Mạng và Bảo mật của Mạnh Cường."
+  title = "Quorix Việt Nam"
+  description = "Portfolio và blog chia sẻ kiến thức Hệ thống, Mạng và Bảo mật của Mạnh Cường."
   author = "Mạnh Cường"
   defaultTheme = "auto"
   disableThemeToggle = false
@@ -33,10 +33,16 @@ buildExpired = false
   ShowCodeCopyButtons = true
   ShowWordCount = true
   ShowToc = true
-  postsLayout = "editorial" # options: editorial | archive | mobile
+  postsLayout = "editorial"
+  quorixUIStylesheet = "https://cdn.jsdelivr.net/npm/@quorix/ui@2.1.4/css/index.css"
+  quorixUIScript = "https://cdn.jsdelivr.net/npm/@quorix/ui@2.1.4/dist/quorix.min.js"
+  homeHeroTitle = "Không gian kỹ thuật cho mạng Tư duy hệ thống và Golang"
+  homeHeroTitleBreaks = ["Không gian kỹ thuật", "Tư duy hệ thống", "và Golang"]
+  homeHeroTitleWidth = "20ch"
+  homeHeroLead = "Xin chào! Mình là Chooky! Chào mừng bạn đến không gian kỹ thuật của Quorix Việt Nam!"
 
   [params.label]
-    text = "Quorix Viet Nam"
+    text = "Quorix Việt Nam"
     icon = "images/brand/quorixAVT.jpg"
     iconHeight = 28
 
@@ -51,6 +57,7 @@ buildExpired = false
   [[params.socialIcons]]
     name = "github"
     url = "https://github.com/vmcchooky"
+
   [[params.socialIcons]]
     name = "facebook"
     url = "https://facebook.com/quorixvietnam"
@@ -61,21 +68,25 @@ buildExpired = false
     name = "Bài viết"
     url = "/posts/"
     weight = 10
+
   [[menu.main]]
     identifier = "projects"
     name = "Dự án"
     url = "/projects/"
     weight = 20
+
   [[menu.main]]
     identifier = "services"
     name = "Dịch vụ"
     url = "/services/"
     weight = 30
+
   [[menu.main]]
     identifier = "taxonomy"
     name = "Chủ đề"
     url = "/taxonomy/"
     weight = 40
+
   [[menu.main]]
     identifier = "search"
     name = "Hỏi Quorix"

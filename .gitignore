@@ -1,3 +1,8 @@
 public/
+public-preview/
 resources/
 .hugo_build.lock
+.codex-build/
+.rollback-check/
+.*-build/
+.*-build-*/

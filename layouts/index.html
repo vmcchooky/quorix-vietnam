@@ -1,97 +1,206 @@
 {{ define "main" }}
-<section class="qx-home">
-  <div class="qx-bg-orb qx-bg-orb-red" aria-hidden="true"></div>
-  <div class="qx-bg-orb qx-bg-orb-blue" aria-hidden="true"></div>
+{{- $heroTitle := site.Params.homeHeroTitle | default "Không gian kỹ thuật cho mạng, tư duy hệ thống và Golang." -}}
+{{- $heroTitleBreaks := site.Params.homeHeroTitleBreaks | default (slice "Không gian kỹ thuật cho mạng," "tư duy hệ thống và Golang.") -}}
+{{- $heroLead := site.Params.homeHeroLead | default "Blog và không gian kỹ thuật về Hệ thống, Mạng, Bảo mật và lập trình Golang. Tập trung tính thực chiến, tối giản trong trình bày và rõ ràng trong tư duy." -}}
+{{- $posts := first 6 (where site.RegularPages "Section" "posts") -}}
+{{- $projects := first 3 (where site.RegularPages "Section" "projects") -}}
+{{- $services := first 2 (where site.RegularPages "Section" "services") -}}
+{{- $heroIcon := site.Params.label.icon -}}
 
-  <div class="qx-hero">
-    <div class="qx-hero-copy">
-      <p class="qx-kicker">QUORIX VIET NAM</p>
-      <h1>Kết nối tri thức mạng lưới, định tuyến tương lai số.</h1>
-      <p class="qx-lead">Blog và không gian kỹ thuật về Hệ thống, Mạng, Bảo mật và lập trình Golang. Tập trung tính thực chiến, tối giản trong trình bày và rõ ràng trong tư duy.</p>
-      <div class="qx-topic-row" aria-label="Chuyên môn Quorix">
-        <span>Network Architecture</span>
-        <span>Security Mindset</span>
-        <span>Golang Engineering</span>
-      </div>
-      <div class="qx-cta-row">
-        <a class="qx-btn qx-btn-primary" href="{{ "/posts/" | relLangURL }}">Đọc bài mới</a>
-        <a class="qx-btn qx-btn-ghost" href="{{ "/projects/" | relLangURL }}">Dự án của Quorix</a>
-        <a class="qx-btn qx-btn-ghost" href="{{ "/services/" | relLangURL }}">Dịch vụ</a>
-      </div>
-      <div class="qx-social-wrap">{{ partial "social_icons.html" (dict "align" "left") }}</div>
-    </div>
-
-    <div class="qx-hero-art">
-      <img src="{{ "images/brand/quorixbackground.png" | relURL }}" alt="Quorix Viet Nam visual" loading="eager">
-    </div>
-  </div>
-
-  <section class="qx-section qx-about-grid qx-section-sticker">
-    <img class="qx-sticker qx-sticker-about" src="{{ "images/brand/mascot/gopher2.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
-    <article class="qx-card qx-about-card">
-      <header class="qx-section-head qx-section-head-tight">
-        <h2>Về Quorix Việt Nam</h2>
+<section class="qx-d-grid qx-gap-8">
+  <section class="qx-grid-2 qx-gap-6" aria-labelledby="home-hero-title">
+    <article class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-md">
+      <header class="qx-d-grid qx-gap-3">
+        <div id="home-brand-lockup" class="qx-d-grid qx-gap-3">
+          <div id="home-brand-row" class="qx-d-flex qx-items-center qx-gap-3">
+            {{- if $heroIcon }}
+              {{- $heroImg := resources.Get $heroIcon }}
+              {{- if $heroImg }}
+            <span id="home-brand-mark" aria-hidden="true">
+              <span id="home-brand-mark-inner"><img src="{{ $heroImg.Permalink }}" alt="" height="56" width="56"></span>
+            </span>
+              {{- else }}
+            <span id="home-brand-mark" aria-hidden="true">
+              <span id="home-brand-mark-inner"><img src="{{ $heroIcon | absURL }}" alt="" height="56" width="56"></span>
+            </span>
+              {{- end }}
+            {{- end }}
+            <div class="qx-d-grid qx-gap-2">
+              <p id="home-brand-title">Quorix Việt Nam</p>
+              <div id="home-keywords" class="qx-d-flex qx-flex-wrap qx-gap-3" aria-label="Từ khóa nổi bật">
+                <span class="qx-badge-soft-blue">Network</span>
+                <span class="qx-badge-soft-yellow">Mindset</span>
+                <span class="qx-badge-soft-green">Security</span>
+                <span class="qx-badge-red">Golang</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <h1 id="home-hero-title">
+          {{- range $heroTitleBreaks }}
+          <span class="qx-d-block">{{ . }}</span>
+          {{- end }}
+          {{- if le (len $heroTitleBreaks) 0 }}{{ $heroTitle }}{{ end }}
+        </h1>
+        <p id="home-hero-lead">
+          Xin chào! Mình là Chooky!<br>
+          Chào mừng bạn đến không gian kỹ thuật của Quorix Việt Nam!
+        </p>
       </header>
-      <p>Quorix Việt Nam là nền tảng chia sẻ kiến thức và dự án kỹ thuật dành cho cộng đồng yêu công nghệ. Phần giới thiệu chuyên sâu về định hướng, câu chuyện thương hiệu và mục tiêu dài hạn sẽ được cập nhật thêm trong thời gian tới.</p>
-      <p>Định hướng nội dung hiện tại tập trung trên ba trục chính: hạ tầng mạng, tư duy bảo mật và phát triển backend với Golang.</p>
+
+      {{- $postCount := len (where site.RegularPages "Section" "posts") -}}
+      {{- $projectCount := len (where site.RegularPages "Section" "projects") -}}
+      {{- $serviceCount := len (where site.RegularPages "Section" "services") -}}
+      <div id="home-stats-row" aria-label="Thống kê nội dung">
+        <a href="{{ "/posts/" | relLangURL }}" id="home-stat-posts" class="home-stat-item">
+          <span class="home-stat-number">{{ $postCount }}</span>
+          <span class="home-stat-label">bài viết</span>
+        </a>
+        <span class="home-stat-divider" aria-hidden="true">·</span>
+        <a href="{{ "/projects/" | relLangURL }}" id="home-stat-projects" class="home-stat-item">
+          <span class="home-stat-number">{{ $projectCount }}</span>
+          <span class="home-stat-label">dự án</span>
+        </a>
+        <span class="home-stat-divider" aria-hidden="true">·</span>
+        <a href="{{ "/services/" | relLangURL }}" id="home-stat-services" class="home-stat-item">
+          <span class="home-stat-number">{{ $serviceCount }}</span>
+          <span class="home-stat-label">dịch vụ</span>
+        </a>
+      </div>
+
+      <div id="home-cta-row" class="qx-d-flex qx-flex-wrap qx-gap-3">
+        <a class="qx-btn qx-btn-primary" href="{{ "/posts/" | relLangURL }}">Đọc bài mới</a>
+        <a class="qx-btn qx-btn-outline" href="{{ "/projects/" | relLangURL }}">Xem dự án</a>
+        <a class="qx-btn qx-btn-ghost" href="{{ "/services/" | relLangURL }}">Khám phá dịch vụ</a>
+      </div>
+
+      <div id="home-social-row" class="qx-d-flex qx-flex-wrap qx-gap-2" aria-label="Liên kết nhanh">
+        {{- range site.Params.socialIcons }}
+        <a class="qx-btn qx-btn-ghost" href="{{ trim .url " " | safeURL }}" target="_blank" rel="noopener noreferrer me">
+          {{ (.title | default .name) | title }}
+        </a>
+        {{- end }}
+      </div>
     </article>
 
-    <aside class="qx-card qx-contact-card">
-      <header class="qx-section-head qx-section-head-tight">
-        <h2>Liên hệ</h2>
-      </header>
-      <ul class="qx-contact-list">
-        <li><span>Email chung:</span> <a href="mailto:contact@quorix.io.vn">contact@quorix.io.vn</a></li>
-        <li><span>Founder:</span> <a href="mailto:chooky@quorix.io.vn">chooky@quorix.io.vn</a></li>
-        <li><span>FB Founder:</span> <a href="https://facebook.com/chooky.vmc" target="_blank" rel="noopener noreferrer">facebook.com/chooky.vmc</a></li>
-      </ul>
+    <aside class="qx-d-grid qx-gap-6">
+      <article class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+        <img src="{{ "images/brand/quorixbackground.png" | relURL }}" alt="Hình đại diện cho không gian kỹ thuật Quorix Việt Nam" loading="eager">
+        <div class="qx-d-grid qx-gap-3">
+          <h2>Bản đồ nội dung</h2>
+          <p class="qx-text-muted">Từ networking, security mindset đến Golang engineering, mọi nội dung đều được viết để có thể quay lại tra cứu và áp dụng vào dự án thật.</p>
+        </div>
+      </article>
+
+      <article class="qx-callout-success qx-p-6">
+        <h2>Bắt đầu từ đâu?</h2>
+        <p>Đọc bài giới thiệu để hiểu rõ Quorix đang xây gì, vì sao nó tồn tại và cách toàn bộ nội dung sẽ được phát triển theo thời gian.</p>
+        <a class="qx-btn qx-btn-primary" href="{{ "/posts/ve-quorix-viet-nam/" | relLangURL }}">Đọc bài giới thiệu</a>
+      </article>
     </aside>
   </section>
 
-  <section class="qx-section qx-section-sticker">
-    <img class="qx-sticker qx-sticker-posts" src="{{ "images/brand/mascot/gopher.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
-    <header class="qx-section-head">
-      <h2>Bài viết gần đây</h2>
-      <a href="{{ "/posts/" | relLangURL }}">Xem tất cả</a>
-    </header>
-    <div class="qx-grid">
-      {{ $posts := where site.RegularPages "Section" "posts" }}
-      {{ range first 6 $posts }}
-      <article class="qx-card">
-        <p class="qx-card-meta">{{ .Date | time.Format ":date_long" }}</p>
+  <section class="qx-d-grid qx-gap-4" aria-labelledby="home-posts-title">
+    <div class="qx-flex-between qx-gap-3">
+      <div>
+        <p class="qx-text-muted">Bài viết mới</p>
+        <h2 id="home-posts-title">Những ghi chép kỹ thuật gần đây</h2>
+      </div>
+      <a class="qx-btn qx-btn-ghost" href="{{ "/posts/" | relLangURL }}">Xem tất cả bài viết</a>
+    </div>
+
+    <div class="qx-grid-3 qx-gap-6">
+      {{- range $posts }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+        <div class="qx-d-flex qx-flex-wrap qx-items-center qx-gap-2">
+          {{- with index .Params.categories 0 }}
+          <span class="qx-badge-soft-blue">{{ . }}</span>
+          {{- else }}
+          <span class="qx-badge-soft-blue">Post</span>
+          {{- end }}
+          {{- if .Params.editorPick }}
+          <span class="qx-badge-yellow">Editor Pick</span>
+          {{- end }}
+        </div>
+        <p class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</p>
         <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
-        <p>{{ .Summary | plainify | truncate 120 }}</p>
+        <p>{{ .Summary | plainify | truncate 150 }}</p>
+        <div class="qx-d-flex qx-flex-wrap qx-items-center qx-gap-3">
+          <span class="qx-text-muted">{{ i18n "read_time" .ReadingTime | default (printf "%d phút" .ReadingTime) }}</span>
+          <a class="qx-btn qx-btn-ghost" href="{{ .RelPermalink }}">Đọc tiếp</a>
+        </div>
       </article>
-      {{ else }}
-      <article class="qx-card qx-card-empty">
+      {{- else }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3">
         <h3>Chưa có bài viết</h3>
-        <p>Hãy thêm bài mới trong thư mục content/posts để bắt đầu hành trình chia sẻ kiến thức.</p>
+        <p class="qx-text-muted">Hãy thêm bài trong `content/posts` để phần này bắt đầu hiển thị nội dung.</p>
       </article>
-      {{ end }}
+      {{- end }}
     </div>
   </section>
 
-  <section class="qx-section qx-section-sticker">
-    <img class="qx-sticker qx-sticker-projects" src="{{ "images/brand/mascot/gopher3.png" | relURL }}" alt="" aria-hidden="true" loading="lazy">
-    <header class="qx-section-head">
-      <h2>Dự án nổi bật</h2>
-      <a href="{{ "/projects/" | relLangURL }}">Khám phá dự án</a>
-    </header>
-    <div class="qx-grid qx-grid-projects">
-      {{ $projects := where site.RegularPages "Section" "projects" }}
-      {{ range first 4 $projects }}
-      <article class="qx-card qx-card-project">
-        <p class="qx-chip">Dự án</p>
-        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
-        <p>{{ .Summary | plainify | truncate 140 }}</p>
-      </article>
-      {{ else }}
-      <article class="qx-card qx-card-empty">
-        <h3>Không có dữ liệu dự án</h3>
-        <p>Bạn có thể tạo mới tại content/projects để hiển thị tại khu vực này.</p>
-      </article>
-      {{ end }}
-    </div>
+  <section class="qx-grid-2 qx-gap-6" aria-labelledby="home-work-title">
+    <section class="qx-d-grid qx-gap-4">
+      <div class="qx-flex-between qx-gap-3">
+        <div>
+          <p class="qx-text-muted">Dự án</p>
+          <h2 id="home-work-title">Những thứ đang được xây</h2>
+        </div>
+        <a class="qx-btn qx-btn-ghost" href="{{ "/projects/" | relLangURL }}">Trang dự án</a>
+      </div>
+
+      <div class="qx-d-grid qx-gap-4">
+        {{- range $projects }}
+        <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+          <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+            <span class="qx-badge-green">Project</span>
+            {{- range first 2 (.Params.tags | default (slice)) }}
+            <span class="qx-badge-soft-green">{{ . }}</span>
+            {{- end }}
+          </div>
+          <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+          <p>{{ .Summary | plainify | truncate 140 }}</p>
+          <a class="qx-btn qx-btn-outline" href="{{ .RelPermalink }}">Xem dự án</a>
+        </article>
+        {{- else }}
+        <article class="qx-card qx-p-6 qx-d-grid qx-gap-3">
+          <h3>Chưa có dữ liệu dự án</h3>
+          <p class="qx-text-muted">Khi có nội dung trong `content/projects`, khu vực này sẽ tự hiển thị.</p>
+        </article>
+        {{- end }}
+      </div>
+    </section>
+
+    <section class="qx-d-grid qx-gap-4" aria-labelledby="home-services-title">
+      <div class="qx-flex-between qx-gap-3">
+        <div>
+          <p class="qx-text-muted">Dịch vụ</p>
+          <h2 id="home-services-title">Nền tảng và năng lực Quorix</h2>
+        </div>
+        <a class="qx-btn qx-btn-ghost" href="{{ "/services/" | relLangURL }}">Trang dịch vụ</a>
+      </div>
+
+      <div class="qx-d-grid qx-gap-4">
+        {{- range $services }}
+        <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+          <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+            <span class="qx-badge-red">Service</span>
+            {{- range first 2 (.Params.tags | default (slice)) }}
+            <span class="qx-badge-soft-yellow">{{ . }}</span>
+            {{- end }}
+          </div>
+          <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+          <p>{{ .Description | default .Summary | plainify | truncate 150 }}</p>
+          <a class="qx-btn qx-btn-primary" href="{{ .RelPermalink }}">Tìm hiểu thêm</a>
+        </article>
+        {{- else }}
+        <article class="qx-card qx-p-6 qx-d-grid qx-gap-3">
+          <h3>Chưa có dịch vụ</h3>
+          <p class="qx-text-muted">Bạn có thể bổ sung thêm nội dung tại `content/services` để mở rộng phần này.</p>
+        </article>
+        {{- end }}
+      </div>
+    </section>
   </section>
 </section>
 {{ end }}

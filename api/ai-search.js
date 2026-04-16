@@ -266,7 +266,7 @@ function extractGroundingSources(payload) {
 
 function buildSearchPrompt(query, candidates) {
   return [
-    'Bạn là trợ lý tìm kiếm nội dung của Quorix Viet Nam.',
+    'Bạn là trợ lý tìm kiếm nội dung của Quorix Việt Nam.',
     'Chỉ dùng các nguồn được cung cấp bên dưới. Không bịa link, không tạo nguồn mới.',
     'Trả lời rõ ràng, có chiều sâu vừa đủ (4-8 câu), bằng tiếng Việt.',
     'Nếu không đủ dữ liệu, hãy nói rõ là chưa đủ chắc chắn.',

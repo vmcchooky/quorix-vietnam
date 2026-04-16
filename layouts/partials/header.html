@@ -1,0 +1,89 @@
+{{- $labelText := site.Params.label.text | default site.Title -}}
+{{- $currentPage := . -}}
+
+<nav id="site-navbar" class="qx-navbar qx-navbar-glass" aria-label="Điều hướng chính">
+  <div id="site-navbar-inner" class="qx-container qx-container-lg">
+    <div id="site-brand-bar" class="qx-d-flex qx-items-center qx-justify-between qx-gap-3">
+      <div id="site-brand-left" class="qx-d-flex qx-items-center qx-gap-2">
+        <a class="qx-navbar-brand" href="{{ "" | absLangURL }}">
+          {{- if site.Params.label.icon }}
+            {{- $img := resources.Get site.Params.label.icon }}
+            {{- if $img }}
+            <span id="site-brand-mark" aria-hidden="true"><img src="{{ $img.Permalink }}" alt="" height="32"></span>
+            {{- else }}
+            <span id="site-brand-mark" aria-hidden="true"><img src="{{ site.Params.label.icon | absURL }}" alt="" height="32"></span>
+            {{- end }}
+          {{- end }}
+          <span>{{ $labelText }}</span>
+        </a>
+
+        {{- if not site.Params.disableThemeToggle }}
+        <button id="site-theme-toggle"
+                class="qx-btn qx-btn-ghost"
+                type="button"
+                data-qx-theme-toggle
+                aria-label="Chuyển giao diện sáng tối">
+          <svg class="theme-icon theme-icon-sun" xmlns="http://www.w3.org/2000/svg"
+               width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="theme-icon theme-icon-moon" xmlns="http://www.w3.org/2000/svg"
+               width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        {{- end }}
+      </div>
+
+      {{- if not site.Params.disableLangToggle }}
+      <div id="site-brand-right" class="qx-d-flex qx-items-center qx-gap-2">
+        {{- $lang := .Lang -}}
+        {{- with site.Home.Translations }}
+          {{- range . }}
+            {{- if ne $lang .Lang }}
+        <a class="qx-btn qx-btn-ghost"
+           href="{{ .Permalink }}"
+           hreflang="{{ .Lang }}">
+          {{- if and site.Params.displayFullLangName .Language.LanguageName -}}
+            {{- .Language.LanguageName | emojify -}}
+          {{- else -}}
+            {{- .Lang | title -}}
+          {{- end -}}
+        </a>
+            {{- end }}
+          {{- end }}
+        {{- end }}
+      </div>
+      {{- end }}
+    </div>
+
+    <ul id="menu" class="qx-navbar-nav qx-d-flex qx-items-center qx-gap-1" role="list">
+      {{- range site.Menus.main }}
+        {{- $menuURL := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL)) | absLangURL -}}
+        {{- $pageURL := $currentPage.Permalink | absLangURL -}}
+        {{- $sectionURL := "" -}}
+        {{- with $currentPage.CurrentSection }}{{- $sectionURL = .Permalink | absLangURL -}}{{- end -}}
+        {{- $active := or (eq $menuURL $pageURL) (and (ne $sectionURL "") (eq $menuURL $sectionURL)) -}}
+      <li>
+        <a class="qx-navbar-link qx-btn qx-btn-ghost{{ if $active }} qx-text-primary is-active{{ end }}"
+           href="{{ .URL | absLangURL }}"
+           {{- if $active }} aria-current="page"{{ end }}>
+          {{ .Name }}
+        </a>
+      </li>
+      {{- end }}
+    </ul>
+  </div>
+</nav>

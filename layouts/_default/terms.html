@@ -1,0 +1,44 @@
+{{- define "main" -}}
+<section class="qx-d-grid qx-gap-8">
+  <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+    {{- partial "breadcrumbs.html" . }}
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      <span class="qx-badge-blue">{{ .Type | title }}</span>
+    </div>
+    <div class="qx-d-grid qx-gap-3">
+      <h1>{{ .Title }}</h1>
+      {{- with .Description }}
+      <p>{{ . }}</p>
+      {{- else }}
+      <p>Danh sách toàn bộ taxonomy thuộc nhóm này.</p>
+      {{- end }}
+    </div>
+  </header>
+
+  <section class="qx-d-grid qx-gap-4" aria-labelledby="terms-list-title">
+    <div>
+      <p class="qx-text-muted">{{ len .Data.Terms.Alphabetical }} mục</p>
+      <h2 id="terms-list-title">Danh sách taxonomy</h2>
+    </div>
+
+    <div class="qx-grid-3 qx-gap-6">
+      {{- $type := .Type }}
+      {{- range .Data.Terms.Alphabetical }}
+      {{- $name := .Name }}
+      {{- $count := .Count }}
+      {{- with site.GetPage (printf "/%s/%s" $type $name) }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+        <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+          <span class="qx-badge-soft-blue">{{ $type | title }}</span>
+          <span class="qx-badge-green">{{ $count }}</span>
+        </div>
+        <h3><a href="{{ .Permalink }}">{{ .Name }}</a></h3>
+        <p class="qx-text-muted">{{ $count }} nội dung gắn với taxonomy này.</p>
+        <a class="qx-btn qx-btn-ghost" href="{{ .Permalink }}">Mở taxonomy</a>
+      </article>
+      {{- end }}
+      {{- end }}
+    </div>
+  </section>
+</section>
+{{- end -}}

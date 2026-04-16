@@ -1,0 +1,60 @@
+{{- define "main" -}}
+<article class="qx-d-grid qx-gap-8">
+  <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+    {{- partial "breadcrumbs.html" . }}
+
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      <span class="qx-badge-red">Service</span>
+      {{- with index (.Params.categories | default (slice)) 0 }}
+      <span class="qx-badge-soft-yellow">{{ . }}</span>
+      {{- end }}
+      {{- range first 2 (.Params.tags | default (slice)) }}
+      <span class="qx-badge-soft-blue">{{ . }}</span>
+      {{- end }}
+    </div>
+
+    <div class="qx-d-grid qx-gap-3">
+      <h1>{{ .Title }}</h1>
+      {{- with .Description }}
+      <p>{{ . }}</p>
+      {{- else }}
+      <p>{{ .Summary }}</p>
+      {{- end }}
+    </div>
+
+    <div class="qx-d-flex qx-flex-wrap qx-gap-3">
+      <span class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</span>
+    </div>
+  </header>
+
+  <section class="qx-grid-2 qx-gap-6">
+    <section class="qx-container-prose">
+      <div class="qx-card qx-p-8 qx-d-grid qx-gap-6 qx-shadow-sm">
+        {{- with (.Param "cover.image" | default .Params.image) }}
+        <img src="{{ . | relURL }}" alt="{{ $.Title }}" class="qx-w-full qx-rounded-lg" loading="lazy" decoding="async">
+        {{- end }}
+        {{ .Content }}
+      </div>
+    </section>
+
+    <aside class="qx-d-grid qx-gap-4">
+      <article class="qx-callout-success qx-p-6">
+        <h2>Liên hệ</h2>
+        <p>Nếu bạn muốn trao đổi sâu hơn về dịch vụ này hoặc khả năng ứng dụng vào sản phẩm thực tế, hãy liên hệ trực tiếp với Quorix.</p>
+        <a class="qx-btn qx-btn-primary" href="mailto:contact@quorix.io.vn">Liên hệ Quorix</a>
+      </article>
+
+      {{- if gt (len (.Params.tags | default (slice))) 0 }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+        <h2>Chủ đề liên quan</h2>
+        <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+          {{- range .Params.tags }}
+          <span class="qx-badge-soft-yellow">{{ . }}</span>
+          {{- end }}
+        </div>
+      </article>
+      {{- end }}
+    </aside>
+  </section>
+</article>
+{{- end -}}

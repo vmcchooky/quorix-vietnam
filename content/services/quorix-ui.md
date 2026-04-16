@@ -65,17 +65,17 @@ import '@quorix/ui/css/index.css';
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@quorix/ui@1.0.1/css/index.css"
+  href="https://cdn.jsdelivr.net/npm/@quorix/ui@2.1.4/css/index.css"
 />
 ```
 
 ## Package info
 
 - Package: `@quorix/ui`
-- Version hiện tại: `1.0.1`
+- Version hiện tại: `2.1.4`
 - GitHub: [vmcchooky/quorix-ui](https://github.com/vmcchooky/quorix-ui)
 - npm: [@quorix/ui](https://www.npmjs.com/package/@quorix/ui)
-- CDN: [jsDelivr](https://cdn.jsdelivr.net/npm/@quorix/ui@1.0.1/css/index.css)
+- CDN: [jsDelivr](https://cdn.jsdelivr.net/npm/@quorix/ui@2.1.4/css/index.css)
 - License: `MIT`
 
 ## Vai trò đối với quorix-vietnam

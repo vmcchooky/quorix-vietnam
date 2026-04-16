@@ -1,8 +1,8 @@
 ---
 title: "Hỏi Quorix"
-layout: "ai-search"
-summary: "Hỏi bằng ngôn ngữ tự nhiên để tìm đúng bài viết, dự án và chủ đề phù hợp trong hệ sinh thái Quorix Viet Nam."
-description: "Tìm kiếm theo ý định, có tóm tắt AI, trích dẫn nguồn và gợi ý câu hỏi tiếp theo."
+layout: "search"
+summary: "Tìm nhanh bài viết, dự án, dịch vụ và chủ đề phù hợp trong hệ sinh thái Quorix Việt Nam."
+description: "Tìm kiếm nội dung đã publish trong Quorix Việt Nam bằng từ khóa gần đúng và điều hướng bằng bàn phím."
 placeholder: "Ví dụ: Tìm bài giải thích internal trong Go, hoặc bài liên quan đến bảo mật mạng"
 robotsNoIndex: true
 ---

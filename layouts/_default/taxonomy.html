@@ -1,0 +1,68 @@
+{{- define "main" -}}
+{{- $paginator := .Paginate .Pages.ByDate.Reverse 9 -}}
+<section class="qx-d-grid qx-gap-8">
+  <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
+    {{- partial "breadcrumbs.html" . }}
+    <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+      <span class="qx-badge-blue">{{ .Data.Plural | title }}</span>
+      <span class="qx-badge-soft-green">{{ .Title }}</span>
+    </div>
+    <div class="qx-d-grid qx-gap-3">
+      <h1>{{ .Title }}</h1>
+      {{- with .Description }}
+      <p>{{ . }}</p>
+      {{- else }}
+      <p>Danh sách nội dung được gắn với taxonomy này.</p>
+      {{- end }}
+    </div>
+  </header>
+
+  <section class="qx-d-grid qx-gap-4" aria-labelledby="taxonomy-items-title">
+    <div class="qx-flex-between qx-gap-3">
+      <div>
+        <p class="qx-text-muted">{{ len .Pages }} nội dung</p>
+        <h2 id="taxonomy-items-title">Nội dung theo taxonomy</h2>
+      </div>
+    </div>
+
+    <div class="qx-grid-3 qx-gap-6">
+      {{- range $paginator.Pages }}
+      <article class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
+        <div class="qx-d-flex qx-flex-wrap qx-gap-2">
+          <span class="qx-badge-soft-blue">{{ .Section | title }}</span>
+          {{- with index (.Params.categories | default (slice)) 0 }}
+          <span class="qx-badge-soft-green">{{ . }}</span>
+          {{- end }}
+        </div>
+        <p class="qx-text-muted">{{ .Date | time.Format ":date_long" }}</p>
+        <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+        <p>{{ .Summary | plainify | truncate 150 }}</p>
+        <a class="qx-btn qx-btn-ghost" href="{{ .RelPermalink }}">Đọc tiếp</a>
+      </article>
+      {{- end }}
+    </div>
+  </section>
+
+  {{- if gt $paginator.TotalPages 1 }}
+  <nav class="qx-pagination qx-d-flex qx-flex-wrap qx-items-center qx-gap-2" aria-label="Pagination">
+    {{- if $paginator.HasPrev }}
+    <a class="qx-page-btn" href="{{ $paginator.Prev.URL }}">Trang trước</a>
+    {{- else }}
+    <span class="qx-page-btn" aria-disabled="true">Trang trước</span>
+    {{- end }}
+    {{- range $paginator.Pagers }}
+      {{- if eq .PageNumber $paginator.PageNumber }}
+    <span class="qx-page-btn" aria-current="page">{{ .PageNumber }}</span>
+      {{- else }}
+    <a class="qx-page-btn" href="{{ .URL }}">{{ .PageNumber }}</a>
+      {{- end }}
+    {{- end }}
+    {{- if $paginator.HasNext }}
+    <a class="qx-page-btn" href="{{ $paginator.Next.URL }}">Trang sau</a>
+    {{- else }}
+    <span class="qx-page-btn" aria-disabled="true">Trang sau</span>
+    {{- end }}
+  </nav>
+  {{- end }}
+</section>
+{{- end -}}
