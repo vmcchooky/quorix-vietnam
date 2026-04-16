@@ -1,0 +1,11 @@
+{{- $caption := "" -}}
+{{- with .Attributes.caption -}}
+  {{- $caption = . -}}
+{{- end -}}
+<figure class="article-media article-mermaid" data-mermaid-block>
+  <div class="article-mermaid__canvas" data-mermaid-canvas aria-live="polite" aria-label="Sơ đồ kiến trúc Mermaid"></div>
+  <pre class="article-mermaid__fallback" data-mermaid-source><code class="language-mermaid">{{ .Inner | htmlEscape }}</code></pre>
+  {{- with $caption }}
+  <figcaption class="article-caption">{{ . | markdownify }}</figcaption>
+  {{- end }}
+</figure>

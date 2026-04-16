@@ -6,3 +6,8 @@ resources/
 .rollback-check/
 .*-build/
 .*-build-*/
+
+# Environment files
+.env
+.env.*
+!.env.example

@@ -1,66 +1,110 @@
 {{ define "main" }}
+{{- $apiURL := "/api/ai-search" | relURL -}}
+{{- $indexURL := "/index.json" | relURL -}}
 <section class="qx-d-grid qx-gap-8">
   <header class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
     {{- partial "breadcrumbs.html" . }}
     <div class="qx-d-flex qx-flex-wrap qx-gap-2">
       <span class="qx-badge-blue">Search</span>
-      <span class="qx-badge-soft-blue">Knowledge</span>
+      <span class="qx-badge-soft-green">Quorix AI</span>
     </div>
     <div class="qx-d-grid qx-gap-3">
-      <h1>{{ .Title }}</h1>
-      <p>{{ .Description | default "Tìm nhanh bài viết, dự án và dịch vụ bằng từ khóa gần đúng." }}</p>
+      <div class="qx-d-flex qx-items-center qx-gap-3">
+        <img src="{{ "images/brand/quorix-ai.svg" | absURL }}" alt="Quorix AI" width="36" height="36" style="border-radius: var(--qx-radius-md); flex-shrink: 0;">
+        <h1>Quorix AI</h1>
+      </div>
+      <p>Tìm kiếm thông tin từ kho thông tin của Quorix và Internet.</p>
     </div>
   </header>
 
-  <section class="qx-grid-2 qx-gap-6" aria-labelledby="search-panel-title">
-    <article class="qx-card qx-p-8 qx-d-grid qx-gap-4 qx-shadow-sm">
-      <h2 id="search-panel-title">Tìm trong toàn bộ Quorix</h2>
-      <p class="qx-text-muted">Nhập từ khóa theo chủ đề, công nghệ hoặc tên bài viết. Kết quả sẽ xuất hiện ngay bên dưới và có thể điều hướng bằng bàn phím.</p>
+  <section class="qx-ai-search" data-api-url="{{ $apiURL }}" data-index-url="{{ $indexURL }}">
 
-      <div id="searchbox" class="qx-d-grid qx-gap-4">
-        <label for="searchInput">Từ khóa tìm kiếm</label>
-        <div class="qx-d-flex qx-flex-wrap qx-gap-3">
-          <input id="searchInput" autofocus placeholder="{{ .Params.placeholder | default "Nhập từ khóa để tìm kiếm..." }}" aria-label="search" type="search" autocomplete="off" maxlength="180" class="qx-w-full">
-          <button id="aiSearchBtn" class="qx-btn qx-btn-primary" type="button" aria-label="Hỏi AI về từ khóa đang nhập">Hỏi AI</button>
-        </div>
-        <div class="qx-d-grid qx-gap-2">
-          <p id="searchStatus" class="qx-text-muted" aria-live="polite">Đang nạp chỉ mục tìm kiếm...</p>
-          <p id="searchResultCount" class="qx-text-muted" aria-live="polite"></p>
-        </div>
-        <div class="qx-d-flex qx-flex-wrap qx-gap-2" aria-label="Từ khóa gợi ý">
-          <button class="qx-btn qx-btn-ghost" type="button" data-search-query="ospf">ospf</button>
-          <button class="qx-btn qx-btn-ghost" type="button" data-search-query="golang">golang</button>
-          <button class="qx-btn qx-btn-ghost" type="button" data-search-query="aes">aes</button>
-          <button class="qx-btn qx-btn-ghost" type="button" data-search-query="design system">design system</button>
-        </div>
+  <form id="qx-search-form" class="qx-search-bar" autocomplete="off">
+    <div id="qx-searchbox" class="qx-d-grid qx-gap-4">
+      <div class="qx-search-input-row">
+        <input
+          id="searchInput"
+          class="qx-search-input"
+          type="search"
+          autofocus
+          maxlength="180"
+          placeholder="{{ .Params.placeholder | default "Ví dụ: OSPF, Golang internal package, AES-256" }}"
+          aria-label="Tìm trong Quorix"
+          autocomplete="off">
+        <button id="aiSearchBtn" class="qx-btn qx-search-submit" type="submit" aria-label="Tìm kiếm">
+          <span class="qx-search-submit-spinner" aria-hidden="true"></span>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </button>
+      </div>
+      <div class="qx-search-meta">
+        <p id="searchStatus" class="qx-text-muted" aria-live="polite"></p>
+        <p id="searchResultCount" class="qx-text-muted" aria-live="polite"></p>
+      </div>
+    </div>
+  </form>
 
-        <section id="ai-panel" class="qx-d-none qx-d-grid qx-gap-4" aria-labelledby="ai-panel-title" aria-live="polite">
-          <div class="qx-callout-success qx-p-6 qx-d-grid qx-gap-3">
+  <div id="qx-stage" class="qx-stage">
+    <div id="qx-browse-shell" class="qx-browse-shell">
+      <div id="qx-quick-chips" class="qx-quick-chips" aria-label="Từ khóa tìm nhanh">
+        <button class="qx-quick-chip" type="button" data-search-query="ospf">ospf</button>
+        <button class="qx-quick-chip" type="button" data-search-query="golang">golang</button>
+        <button class="qx-quick-chip" type="button" data-search-query="security">security</button>
+        <button class="qx-quick-chip" type="button" data-search-query="aes">aes</button>
+        <button class="qx-quick-chip" type="button" data-search-query="quorix ui">quorix ui</button>
+      </div>
+
+      <article id="ai-panel" class="qx-ai-explainer" hidden aria-live="polite">
+        <div class="qx-ai-explainer-head">
+          <div class="qx-ai-head-main">
             <div class="qx-d-flex qx-flex-wrap qx-items-center qx-gap-2">
-              <p id="ai-panel-title"><strong>Quorix AI</strong></p>
-              <span id="ai-confidence-badge"></span>
-              <span id="ai-provider-badge" class="qx-text-muted"></span>
+              <p class="qx-ai-explainer-title">Tóm tắt từ Quorix AI</p>
+              <span id="aiLoadingBadge" class="qx-ai-loading-badge" hidden>
+                <span class="qx-ai-loading-dot" aria-hidden="true"></span>
+                AI đang phân tích
+              </span>
+              <span id="aiConfidenceBadge" class="qx-confidence" hidden></span>
             </div>
-            <p id="ai-answer" class="qx-text-muted"></p>
-            <div id="ai-followups" class="qx-d-flex qx-flex-wrap qx-gap-2" aria-label="Câu hỏi tiếp theo"></div>
+            <span id="aiProviderBadge" class="qx-ai-provider"></span>
           </div>
-          <div id="ai-citations" class="qx-d-grid qx-gap-3" aria-label="Nguồn tham khảo"></div>
-        </section>
+          <button id="openChatBtn" class="qx-ai-chat-trigger" type="button" hidden aria-label="Mở chat AI để hỏi tiếp">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 3c4.97 0 9 3.58 9 8 0 2.08-.91 3.98-2.4 5.39.13 1.39.56 2.72 1.25 3.88-.98-.2-3.1-.88-4.63-2.03A10.38 10.38 0 0 1 12 19c-4.97 0-9-3.58-9-8s4.03-8 9-8Zm-4.25 7.1a1.15 1.15 0 1 0 0 2.3 1.15 1.15 0 0 0 0-2.3Zm4.25 0a1.15 1.15 0 1 0 0 2.3 1.15 1.15 0 0 0 0-2.3Zm4.25 0a1.15 1.15 0 1 0 0 2.3 1.15 1.15 0 0 0 0-2.3Z" fill="currentColor"/>
+            </svg>
+            <span>Hỏi tiếp</span>
+          </button>
+        </div>
+        <div id="aiAnswer" class="qx-ai-explainer-text"></div>
+        <div id="aiFollowups" class="qx-ai-followups" hidden></div>
+        <section id="aiCitations" class="qx-source-list" hidden aria-label="Nguồn tham khảo"></section>
+      </article>
 
-        <ul id="searchResults" class="qx-d-grid qx-gap-3" aria-label="Kết quả tìm kiếm" role="list"></ul>
-      </div>
-    </article>
+      <section id="qx-fast-wrap" class="qx-fast-wrap" hidden aria-label="Kết quả tìm kiếm nhanh">
+        <div id="qx-search-results" class="qx-fast-results" role="list"></div>
+      </section>
+    </div>
 
-    <aside class="qx-card qx-p-6 qx-d-grid qx-gap-3 qx-shadow-sm">
-      <h2>Gợi ý truy vấn</h2>
-      <div class="qx-d-flex qx-flex-wrap qx-gap-2">
-        <span class="qx-badge-soft-blue">ospf</span>
-        <span class="qx-badge-soft-green">golang</span>
-        <span class="qx-badge-soft-yellow">aes</span>
-        <span class="qx-badge-soft-blue">design system</span>
+    <section id="chatShell" class="qx-chat-shell" hidden aria-label="Quorix AI chat">
+      <div class="qx-chat-top">
+        <button id="chatBackBtn" class="qx-chat-back" type="button" aria-label="Quay lại kết quả tìm kiếm">←</button>
+        <p id="chatContext" class="qx-chat-context">Đang trao đổi cùng Quorix AI.</p>
       </div>
-      <p class="qx-text-muted">Search hiện dùng chỉ mục tĩnh của site, nên kết quả sẽ ưu tiên nội dung đã được publish trong Quorix.</p>
-    </aside>
+
+      <div id="chatThread" class="qx-chat-thread" aria-live="polite"></div>
+
+      <form id="chatForm" class="qx-chat-form" autocomplete="off">
+        <div class="qx-chat-compose-row">
+          <textarea id="chatInput" class="qx-chat-input" rows="2" maxlength="180" placeholder="Hỏi tiếp để đào sâu chủ đề..."></textarea>
+          <button id="chatSendBtn" class="qx-chat-send" type="submit" aria-label="Gửi câu hỏi">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M20.7 3.3a1 1 0 0 0-1.03-.23L3.7 8.95a1 1 0 0 0 .03 1.88l6.18 2.22 2.22 6.18a1 1 0 0 0 1.88.03l5.88-15.96a1 1 0 0 0-.2-1.03Zm-7.1 13.1-1.48-4.13a1 1 0 0 0-.6-.6L7.4 10.2l10.02-3.7-3.82 9.9Z" />
+            </svg>
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
   </section>
 </section>
 {{ end }}

@@ -1,0 +1,1275 @@
+/*
+ * quorix-overrides.css
+ *
+ * Chứa toàn bộ CSS tự chế không thuộc @quorix/ui.
+ * Mỗi block có comment link đến mục tương ứng trong .grow/deficiencies.md.
+ *
+ * Khi @quorix/ui bổ sung API chính thức cho một mục, hãy:
+ *   1. Xóa block tương ứng khỏi file này.
+ *   2. Thay bằng class/token chính thức của Quorix UI.
+ *   3. Đánh dấu mục đó là "Resolved" trong deficiencies.md.
+ */
+
+/* =============================================================================
+   #5 — Skip Link
+   deficiencies.md § 5. Skip Link (Accessibility)
+   ============================================================================= */
+.qx-skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--qx-brand-blue);
+  color: #fff;
+  border-radius: 0 0 var(--qx-radius-md) var(--qx-radius-md);
+  font-weight: bold;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+.qx-skip-link:focus {
+  top: 0;
+}
+
+/* =============================================================================
+   #1 — Fixed / Floating Navbar (pill dock)
+   deficiencies.md § 1. Fixed / Floating Navbar
+   ============================================================================= */
+#site-header {
+  position: fixed;
+  top: auto;
+  bottom: 0.75rem;
+  left: 50%;
+  right: auto;
+  width: min(1080px, calc(100vw - 1rem));
+  transform: translateX(-50%);
+  z-index: 1000;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+}
+
+/* =============================================================================
+   #2 — Navbar Backdrop Blur / Glassmorphism
+   deficiencies.md § 2. Navbar Backdrop Blur / Glassmorphism nâng cao
+   ============================================================================= */
+#site-navbar {
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100%;
+  border-radius: clamp(0.5rem, 3vw, 3rem);
+  border: 1px solid color-mix(in srgb, var(--qx-border) 40%, transparent);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: color-mix(in srgb, var(--qx-bg-base) 70%, transparent) !important;
+}
+
+/* =============================================================================
+   #3 — Auto-hide Navbar on Scroll (state classes)
+   deficiencies.md § 3. Auto-hide / Show navbar on scroll
+   ============================================================================= */
+body {
+  padding-bottom: 9rem;
+}
+body.is-nav-idle #site-header {
+  transform: translateX(-50%) translateY(calc(100% + 1.5rem));
+  opacity: 0;
+  pointer-events: none;
+}
+body.is-nav-returning #site-header {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* =============================================================================
+   #1 — Navbar inner layout (bù cho thiếu fixed navbar layout)
+   deficiencies.md § 1. Fixed / Floating Navbar
+   ============================================================================= */
+#site-navbar-inner {
+  display: grid;
+  gap: var(--qx-space-2);
+  padding-top: var(--qx-space-4);
+  padding-bottom: var(--qx-space-4);
+}
+#site-brand-bar,
+#site-brand-left,
+#site-brand-right {
+  min-width: 0;
+  flex-shrink: 0;
+}
+#site-brand-left .qx-navbar-brand {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* =============================================================================
+   #6 — Logo Ring / Brand Mark
+   deficiencies.md § 6. Logo Ring / Brand Mark
+   ============================================================================= */
+#site-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--qx-border) 68%, var(--qx-brand-blue) 32%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--qx-brand-blue) 14%, transparent),
+    color-mix(in srgb, var(--qx-brand-green) 12%, transparent),
+    color-mix(in srgb, var(--qx-brand-yellow) 10%, transparent)
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--qx-bg-base) 70%, transparent) inset,
+    0 6px 16px color-mix(in srgb, var(--qx-brand-blue) 10%, transparent);
+}
+#site-brand-left .qx-navbar-brand img {
+  border-radius: 50%;
+  display: block;
+  object-fit: cover;
+}
+
+/* =============================================================================
+   #9 — Theme Icon Swap (Sun / Moon)
+   deficiencies.md § 9. Theme Icon Swap (Sun / Moon)
+   ============================================================================= */
+#site-theme-toggle {
+  padding-inline: var(--qx-space-2);
+}
+#site-theme-toggle .theme-icon-moon {
+  display: none;
+}
+html[data-theme="dark"] #site-theme-toggle .theme-icon-sun {
+  display: none;
+}
+html[data-theme="dark"] #site-theme-toggle .theme-icon-moon {
+  display: block;
+}
+html[data-theme="light"] #site-theme-toggle .theme-icon-sun,
+html[data-theme="auto"] #site-theme-toggle .theme-icon-sun {
+  display: block;
+}
+html[data-theme="light"] #site-theme-toggle .theme-icon-moon,
+html[data-theme="auto"] #site-theme-toggle .theme-icon-moon {
+  display: none;
+}
+
+/* =============================================================================
+   #1 — Navbar menu scroll (bù cho thiếu overflow handling trong pill navbar)
+   deficiencies.md § 1. Fixed / Floating Navbar
+   ============================================================================= */
+#menu {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: var(--qx-space-10);
+  margin-top: calc(var(--qx-space-10) * -1);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+}
+#menu::-webkit-scrollbar {
+  display: none;
+}
+#menu li,
+#menu a {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* =============================================================================
+   #10 — Navbar Link Active States
+   deficiencies.md § 10. Navbar Link Active States (Hover / Press)
+   ============================================================================= */
+#menu a[aria-current="page"] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qx-border) 40%, transparent);
+}
+
+/* =============================================================================
+   #7 — Stats / Counter Block
+   deficiencies.md § 7. Stats / Counter Block
+   ============================================================================= */
+#home-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.home-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  text-decoration: none;
+  color: inherit;
+}
+.home-stat-item:hover {
+  opacity: 0.72;
+}
+.home-stat-number {
+  color: var(--qx-brand-blue);
+}
+.home-stat-divider {
+  color: var(--qx-text-muted, #888);
+  user-select: none;
+}
+
+/* =============================================================================
+   #7 — Home hero / brand block (bù cho thiếu stats + brand mark component)
+   deficiencies.md § 7. Stats / Counter Block
+   deficiencies.md § 6. Logo Ring / Brand Mark
+   ============================================================================= */
+#home-cta-row,
+#home-social-row {
+  align-items: center;
+  align-content: flex-start;
+}
+#home-cta-row .qx-btn,
+#home-social-row .qx-btn {
+  display: inline-flex;
+  width: auto;
+  min-height: 0;
+  height: auto;
+  padding: 0.95rem 1.35rem;
+  line-height: 1.15;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+#home-brand-row {
+  align-items: center;
+}
+#home-brand-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 999px;
+}
+#home-brand-mark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    var(--qx-brand-blue),
+    var(--qx-brand-green),
+    var(--qx-brand-yellow),
+    var(--qx-brand-red),
+    var(--qx-brand-blue)
+  );
+  animation: qx-brand-orbit 7s linear infinite;
+}
+#home-brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--qx-bg-base) 94%, transparent);
+}
+#home-brand-mark-inner {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--qx-bg-base) 90%, transparent);
+}
+#home-brand-mark img {
+  display: block;
+  border-radius: 999px;
+  object-fit: cover;
+}
+#home-brand-title {
+  margin: 0;
+  color: var(--qx-brand-red);
+  font-weight: 800;
+  line-height: 1.1;
+}
+#home-keywords span:nth-child(1) {
+  color: color-mix(in srgb, var(--qx-text-main) 6%, var(--qx-brand-blue) 94%);
+}
+#home-keywords span:nth-child(2) {
+  color: color-mix(in srgb, var(--qx-text-main) 8%, var(--qx-brand-yellow) 92%);
+}
+#home-keywords span:nth-child(3) {
+  color: color-mix(in srgb, var(--qx-text-main) 10%, var(--qx-brand-green) 90%);
+}
+#home-keywords span:nth-child(4) {
+  color: var(--qx-brand-red);
+  font-weight: 400;
+}
+#home-hero-title {
+  margin: 0 !important;
+  font-size: clamp(2.2rem, 4.3vw, 3.9rem) !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.02em !important;
+  max-width: none !important;
+}
+#home-hero-lead {
+  margin: 0 !important;
+  max-width: none !important;
+  line-height: 1.6 !important;
+  font-size: 1.25rem !important;
+  text-align: left !important;
+  hyphens: none !important;
+  white-space: normal !important;
+}
+
+/* =============================================================================
+   #8 — Footer Layout Component
+   deficiencies.md § 8. Footer Layout Component
+   ============================================================================= */
+#site-footer-grid {
+  grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 1fr);
+  align-items: stretch;
+}
+#footer-story,
+#footer-contact {
+  height: 100%;
+}
+#footer-story-text {
+  margin: 0;
+  text-align: justify;
+  text-wrap: pretty;
+  max-width: 58ch;
+  line-height: 1.75;
+}
+#footer-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--qx-brand-blue) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--qx-border) 74%, var(--qx-brand-blue) 26%);
+}
+#footer-brand-mark img {
+  display: block;
+  border-radius: 0.85rem;
+  object-fit: cover;
+}
+#footer-brand-title {
+  font-size: 1.3rem;
+  font-family: var(--qx-font-heading);
+  font-weight: 800;
+  color: var(--qx-text-main);
+}
+#footer-contact {
+  background: transparent;
+}
+#footer-contact-title {
+  margin: 0;
+  color: color-mix(in srgb, var(--qx-text-main) 80%, var(--qx-brand-blue) 20%);
+}
+#footer-contact .qx-nav-item {
+  border: 1px solid color-mix(in srgb, var(--qx-border) 74%, transparent);
+  border-radius: 1rem;
+  padding: 0.85rem 1rem;
+  background: color-mix(in srgb, var(--qx-bg-base) 78%, transparent);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04);
+}
+
+/* =============================================================================
+   #4 — Scroll-to-top Button (FAB)
+   deficiencies.md § 4. Scroll-to-top Button (FAB)
+   ============================================================================= */
+#scroll-to-top {
+  position: fixed;
+  right: 1rem;
+  bottom: 7rem;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-radius: 999px;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  z-index: 950;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+#scroll-to-top.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* =============================================================================
+   #11 — Entrance Animations / Keyframes
+   deficiencies.md § 11. Entrance Animations / Keyframes
+   ============================================================================= */
+@keyframes qx-brand-orbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* =============================================================================
+   #9 — Gopher mascot indicator (active nav)
+   deficiencies.md § 9. Theme Icon Swap — mục mascot indicator không thuộc Quorix UI
+   ============================================================================= */
+.qx-navbar-link {
+  position: relative;
+  overflow: visible;
+}
+.qx-navbar-link.is-active::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -32px;
+  transform: translateX(-50%) translateY(10px);
+  width: 28px;
+  height: 28px;
+  background-image: url('/images/brand/mascot/gopher.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  animation: gopherPopUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: none;
+}
+@keyframes gopherPopUp {
+  0%   { transform: translateX(-50%) translateY(10px); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0);    opacity: 1; }
+}
+
+/* =============================================================================
+   Responsive overrides
+   ============================================================================= */
+
+/* deficiencies.md § 1. Fixed / Floating Navbar
+   deficiencies.md § 8. Footer Layout Component */
+@media (min-width: 768px) {
+  body {
+    padding-bottom: 7rem;
+  }
+  #site-navbar-inner {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--qx-space-6);
+  }
+  #menu {
+    justify-content: flex-end;
+  }
+  #scroll-to-top {
+    bottom: 6.5rem;
+    right: 1.25rem;
+  }
+  .qx-navbar-link.is-active::before {
+    top: -36px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* deficiencies.md § 8. Footer Layout Component
+   deficiencies.md § 7. Stats / Counter Block */
+@media (max-width: 767px) {
+  #site-footer-grid {
+    grid-template-columns: 1fr;
+  }
+  #home-hero-title {
+    font-size: clamp(1.1rem, 5vw, 1.6rem) !important;
+    line-height: 1.2 !important;
+  }
+  #home-hero-lead {
+    font-size: 0.95rem !important;
+    text-align: left !important;
+    hyphens: none !important;
+  }
+  #home-cta-row .qx-btn,
+  #home-social-row .qx-btn {
+    padding: 0.9rem 1.1rem;
+  }
+}
+
+/* =============================================================================
+   deficiencies.md § 11. Entrance Animations / Keyframes
+   Tôn trọng prefers-reduced-motion
+   ============================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  #site-header,
+  #scroll-to-top,
+  #home-brand-mark::before,
+  .qx-navbar-link.is-active::before {
+    transition: none !important;
+    animation: none !important;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* =============================================================================
+   Badge align fix — bù cho flexbox stretch behavior
+   deficiencies.md § 16. qx-badge-soft-red — Thiếu variant (liên quan badge system)
+   ============================================================================= */
+[class*="qx-badge-"] {
+  align-self: center;
+}
+
+/* =============================================================================
+   Text justify cho prose content
+   (Quorix UI không có typography utility cho text-align: justify)
+   ============================================================================= */
+.qx-prose p,
+.qx-container-prose p {
+  text-align: justify;
+  hyphens: auto;
+}
+.qx-card p:not(.qx-text-muted) {
+  text-align: justify;
+  hyphens: auto;
+}
+
+/* =============================================================================
+   #12 - Search UI Components
+   deficiencies.md § 12. Search UI Components
+   ============================================================================= */
+.qx-ai-search {
+  --qx-link-blue: #3f78c7;
+  --qx-violet-blue: #5968d9;
+  --qx-card-bg: color-mix(in srgb, #FAF8F3 75%, transparent);
+  --qx-card-border: color-mix(in srgb, var(--qx-border) 18%, transparent);
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* deficiencies.md § 12. Search UI Components */
+[data-theme="dark"] .qx-ai-search {
+  --qx-card-bg: color-mix(in srgb, #161B22 75%, transparent);
+  --qx-card-border: rgba(255, 255, 255, 0.06);
+}
+.qx-ai-search [hidden] {
+  display: none !important;
+}
+.qx-search-head {
+  display: grid;
+  gap: 0.7rem;
+}
+.qx-search-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.qx-search-brand-logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 10px 22px rgba(72, 87, 115, 0.16);
+}
+.qx-search-copy {
+  display: grid;
+  gap: 0.3rem;
+}
+.qx-search-copy h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3.7vw, 2.8rem);
+  line-height: 1.08;
+}
+.qx-search-lead {
+  margin: 0;
+  color: var(--qx-muted);
+  line-height: 1.65;
+}
+.qx-search-bar {
+  border: 1px solid var(--qx-card-border);
+  border-radius: 18px;
+  background: var(--qx-card-bg);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  box-shadow: var(--qx-shadow);
+  padding: 0.75rem;
+}
+.qx-search-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+.qx-search-input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--qx-text) 18%, var(--qx-card-border) 82%);
+  border-radius: 14px;
+  padding: 0.9rem 1.4rem;
+  background: color-mix(in srgb, var(--qx-surface-strong, #fff) 84%, transparent);
+  color: var(--qx-text);
+  font: inherit;
+  font-family: var(--qx-font-body, inherit);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.qx-search-input::placeholder {
+  font-family: var(--qx-font-body, inherit);
+  opacity: 0.6;
+}
+/* deficiencies.md § 12. Search UI Components */
+[data-theme="dark"] .qx-search-input {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(145deg, rgba(33, 41, 54, 0.92), rgba(25, 32, 43, 0.9));
+}
+/* deficiencies.md § 12. Search UI Components – focus state */
+.qx-search-input:focus,
+.qx-search-input:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--qx-brand-blue) 28%, transparent);
+  box-shadow: 0 0 0 3px var(--qx-brand-blue-alpha-10);
+}
+[data-theme="dark"] .qx-search-input:focus,
+[data-theme="dark"] .qx-search-input:focus-visible {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(99, 132, 200, 0.12);
+}
+.qx-search-submit {
+  flex-shrink: 0;
+  width: 2.8rem;
+  height: 2.8rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--qx-text-on-accent);
+  background: var(--qx-brand-blue);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+.qx-search-submit[disabled] {
+  cursor: wait;
+  opacity: 0.92;
+}
+.qx-search-submit:hover {
+  background: var(--qx-brand-blue-hover);
+  transform: scale(1.05);
+}
+.qx-search-submit .qx-search-submit-spinner {
+  display: none;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.34);
+  border-top-color: currentColor;
+  border-radius: 999px;
+  animation: qx-search-spin 0.78s linear infinite;
+}
+.qx-search-submit[aria-busy="true"] svg {
+  display: none;
+}
+.qx-search-submit[aria-busy="true"] .qx-search-submit-spinner {
+  display: inline-block;
+}
+.qx-search-submit svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  stroke: currentColor;
+}
+.qx-search-meta {
+  display: none;
+}
+.qx-search-meta:has(p:not(:empty)) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+}
+.qx-search-meta p {
+  margin: 0;
+}
+.qx-stage {
+  position: relative;
+  isolation: isolate;
+  min-height: clamp(30rem, 68vh, 44rem);
+  border-radius: 20px;
+}
+.qx-browse-shell {
+  display: grid;
+  gap: 0.78rem;
+  align-content: start;
+  max-height: 100%;
+}
+.qx-stage .qx-browse-shell {
+  transition: opacity 0.22s ease, transform 0.24s ease, filter 0.24s ease;
+}
+.qx-stage.is-chat .qx-browse-shell {
+  opacity: 0.22;
+  transform: scale(0.997);
+  filter: blur(1px) saturate(0.9);
+  pointer-events: none;
+}
+.qx-quick-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.45rem 0.2rem 0.1rem;
+  align-items: center;
+}
+.qx-quick-chip,
+.qx-ai-follow-chip {
+  border: 1px solid color-mix(in srgb, var(--qx-brand-blue) 14%, var(--qx-card-border) 86%);
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(244, 248, 253, 0.96));
+  color: color-mix(in srgb, var(--qx-text) 86%, var(--qx-brand-blue) 14%);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1;
+  font-family: var(--qx-font-heading);
+  letter-spacing: -0.01em;
+  box-shadow: 0 10px 22px rgba(85, 99, 122, 0.08);
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease;
+}
+.qx-quick-chip:hover,
+.qx-ai-follow-chip:hover,
+.qx-quick-chip:focus-visible,
+.qx-ai-follow-chip:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--qx-brand-blue) 28%, var(--qx-card-border) 72%);
+  box-shadow: 0 14px 28px rgba(76, 92, 118, 0.12);
+  color: color-mix(in srgb, var(--qx-text) 72%, var(--qx-brand-blue) 28%);
+}
+.qx-fast-wrap,
+.qx-ai-explainer,
+.qx-source-list {
+  border: 1px solid var(--qx-card-border);
+  border-radius: 18px;
+  background: var(--qx-card-bg);
+  box-shadow: var(--qx-shadow);
+  padding: 0.82rem 0.92rem;
+}
+.qx-fast-wrap {
+  margin-top: 0.2rem;
+}
+.qx-fast-results,
+.qx-source-list {
+  display: grid;
+  gap: 0.58rem;
+  align-content: start;
+}
+.qx-fast-card,
+.qx-source-card {
+  border: 1px solid var(--qx-card-border);
+  border-radius: 14px;
+  background: var(--qx-surface-strong, #fff);
+  padding: 0.78rem 0.88rem;
+  overflow: hidden;
+}
+.qx-fast-card[aria-selected="true"] {
+  border-color: color-mix(in srgb, var(--qx-link-blue) 48%, var(--qx-card-border) 52%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--qx-link-blue) 18%, transparent);
+}
+.qx-fast-kicker,
+.qx-source-kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.qx-fast-kicker {
+  color: color-mix(in srgb, var(--qx-muted) 78%, var(--qx-text) 22%);
+}
+.qx-source-kicker {
+  color: var(--qx-red-strong);
+}
+.qx-fast-card h3,
+.qx-source-card h3 {
+  position: static;
+  display: block;
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+.qx-fast-card h3 a,
+.qx-source-card h3 a {
+  position: static;
+  inset: auto;
+  display: inline-block;
+  transform: none;
+  width: auto;
+  height: auto;
+  color: var(--qx-link-blue);
+}
+.qx-fast-results a,
+.qx-source-list a {
+  position: static;
+  inset: auto;
+  width: auto;
+  height: auto;
+}
+.qx-fast-summary,
+.qx-source-card p {
+  margin: 0.42rem 0 0;
+  color: var(--qx-muted);
+  line-height: 1.62;
+}
+.qx-fast-meta,
+.qx-source-meta,
+.qx-source-excerpt {
+  margin: 0.32rem 0 0;
+  color: color-mix(in srgb, var(--qx-muted) 86%, var(--qx-text) 14%);
+  font-size: 0.82rem;
+}
+.qx-fast-card mark {
+  background: rgba(255, 216, 110, 0.35);
+  border-radius: 0.22rem;
+  padding: 0 0.14rem;
+}
+.qx-empty-fast {
+  margin: 0;
+  color: var(--qx-muted);
+}
+.qx-ai-explainer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+.qx-ai-head-main {
+  display: grid;
+  gap: 0.35rem;
+}
+.qx-ai-explainer-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--qx-muted) 78%, var(--qx-text) 22%);
+}
+.qx-ai-provider {
+  color: var(--qx-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+.qx-ai-loading-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border-radius: 999px;
+  padding: 0.16rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--qx-brand-blue) 22%, var(--qx-card-border) 78%);
+  background: color-mix(in srgb, var(--qx-brand-blue) 10%, transparent);
+  color: color-mix(in srgb, var(--qx-brand-blue) 80%, var(--qx-text) 20%);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.qx-ai-loading-dot {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--qx-brand-blue) 34%, transparent);
+  border-top-color: currentColor;
+  animation: qx-search-spin 0.84s linear infinite;
+}
+.qx-ai-chat-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  border: 1px solid var(--qx-card-border);
+  border-radius: 999px;
+  padding: 0.46rem 0.72rem;
+  background: var(--qx-surface-strong, #fff);
+  color: var(--qx-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.qx-ai-chat-trigger svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+.qx-ai-explainer-text {
+  color: var(--qx-text);
+  line-height: 1.78;
+}
+.qx-ai-explainer-text p {
+  margin: 0;
+}
+.qx-ai-explainer-text p + p {
+  margin-top: 0.62rem;
+}
+.qx-ai-explainer-text ul,
+.qx-ai-explainer-text ol {
+  margin: 0.42rem 0 0;
+  padding-left: 1.1rem;
+}
+.qx-ai-explainer-text li + li {
+  margin-top: 0.22rem;
+}
+.qx-ai-explainer-text code {
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--qx-card-border) 58%, transparent);
+  padding: 0.06rem 0.34rem;
+  font-size: 0.88em;
+}
+.qx-ai-explainer-text pre {
+  margin: 0.46rem 0 0;
+  padding: 0.72rem 0.8rem;
+  border-radius: 12px;
+  background: linear-gradient(155deg, rgba(18, 27, 38, 0.95), rgba(32, 45, 61, 0.92));
+  color: #edf3ff;
+  overflow: auto;
+  font-size: 0.84rem;
+  line-height: 1.58;
+}
+.qx-ai-explainer-text pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+.qx-ai-followups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-top: 0.72rem;
+}
+.qx-ai-explainer .qx-source-list {
+  margin-top: 0.82rem;
+}
+.qx-confidence {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.12rem 0.4rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.qx-confidence-high {
+  color: #1f6a47;
+  border-color: rgba(65, 160, 109, 0.34);
+  background: rgba(65, 160, 109, 0.18);
+}
+.qx-confidence-medium {
+  color: #9b6c18;
+  border-color: rgba(204, 155, 62, 0.32);
+  background: rgba(236, 191, 94, 0.2);
+}
+.qx-confidence-low {
+  color: #9d3747;
+  border-color: rgba(224, 83, 101, 0.34);
+  background: rgba(224, 83, 101, 0.17);
+}
+.qx-chat-shell {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  border: 1px solid var(--qx-card-border);
+  border-radius: 20px;
+  background: var(--qx-card-bg);
+  box-shadow: var(--qx-shadow);
+  padding: 0.85rem;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.74rem;
+  opacity: 0;
+  transform: translateY(8px) scale(0.996);
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+.qx-chat-shell.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.qx-chat-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.qx-chat-back {
+  width: 2.05rem;
+  height: 2.05rem;
+  border: 1px solid var(--qx-card-border);
+  border-radius: 50%;
+  background: var(--qx-surface-strong, #fff);
+  color: var(--qx-text);
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.qx-chat-context {
+  margin: 0;
+  color: var(--qx-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.qx-chat-thread {
+  display: grid;
+  gap: 0.68rem;
+  align-content: start;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.16rem;
+  scroll-behavior: smooth;
+}
+.qx-chat-msg {
+  display: grid;
+  gap: 0.36rem;
+  justify-items: start;
+}
+.qx-chat-msg.is-user {
+  justify-items: end;
+}
+.qx-chat-meta {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--qx-muted) 82%, var(--qx-text) 18%);
+}
+.qx-chat-bubble {
+  max-width: min(90%, 52rem);
+  border: 1px solid var(--qx-card-border);
+  border-radius: 16px;
+  padding: 0.78rem 0.86rem;
+  background: linear-gradient(155deg, var(--qx-surface-strong, #fff), rgba(255, 255, 255, 0.82));
+  color: var(--qx-text);
+  line-height: 1.74;
+  box-shadow: 0 8px 16px rgba(66, 82, 106, 0.06);
+}
+.qx-chat-msg.is-user .qx-chat-bubble {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--qx-red-strong), #f06556);
+  color: #f7fbff;
+}
+.qx-chat-msg.is-loading .qx-chat-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.14rem;
+  white-space: nowrap;
+}
+.qx-chat-bubble p {
+  margin: 0;
+}
+.qx-chat-bubble p + p {
+  margin-top: 0.62rem;
+}
+.qx-chat-bubble ul,
+.qx-chat-bubble ol {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+.qx-chat-bubble li + li {
+  margin-top: 0.22rem;
+}
+.qx-chat-bubble code {
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--qx-card-border) 58%, transparent);
+  padding: 0.06rem 0.34rem;
+  font-size: 0.88em;
+}
+.qx-chat-bubble pre {
+  margin: 0.46rem 0 0;
+  padding: 0.72rem 0.8rem;
+  border-radius: 12px;
+  background: linear-gradient(155deg, rgba(18, 27, 38, 0.95), rgba(32, 45, 61, 0.92));
+  color: #edf3ff;
+  overflow: auto;
+  font-size: 0.84rem;
+  line-height: 1.58;
+}
+.qx-chat-bubble pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+.qx-chat-form {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.78) 22%, rgba(255, 255, 255, 0.97));
+  padding-top: 0.3rem;
+}
+.qx-chat-compose-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+.qx-chat-input {
+  min-height: 3.5rem;
+  max-height: 11rem;
+  resize: none;
+  border: 1px solid var(--qx-card-border);
+  border-radius: 14px;
+  padding: 0.72rem 0.8rem;
+  background: var(--qx-surface-strong, #fff);
+  color: var(--qx-text);
+  font: inherit;
+  line-height: 1.55;
+}
+.qx-chat-send {
+  border: 1px solid transparent;
+  border-radius: 50%;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  color: #f6f8fd;
+  background: linear-gradient(135deg, var(--qx-red-strong), var(--qx-yellow));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.qx-chat-send svg {
+  width: 1.16rem;
+  height: 1.16rem;
+  fill: currentColor;
+}
+.qx-search-input:focus-visible,
+.qx-chat-input:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--qx-link-blue) 48%, var(--qx-card-border) 52%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--qx-link-blue) 17%, transparent);
+}
+@keyframes qx-search-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+html[data-theme="dark"] .qx-ai-search {
+  --qx-link-blue: #7fb2ff;
+  --qx-violet-blue: #7682ff;
+  --qx-card-bg: linear-gradient(145deg, rgba(24, 31, 41, 0.96), rgba(20, 26, 36, 0.98));
+  --qx-card-border: rgba(168, 184, 206, 0.18);
+}
+html[data-theme="dark"] .qx-search-input,
+html[data-theme="dark"] .qx-quick-chip,
+html[data-theme="dark"] .qx-ai-follow-chip,
+html[data-theme="dark"] .qx-fast-card,
+html[data-theme="dark"] .qx-source-card,
+html[data-theme="dark"] .qx-chat-bubble,
+html[data-theme="dark"] .qx-chat-input,
+html[data-theme="dark"] .qx-chat-back {
+  background: linear-gradient(145deg, rgba(33, 41, 54, 0.96), rgba(25, 32, 43, 0.96));
+}
+html[data-theme="dark"] .qx-chat-form {
+  background: linear-gradient(180deg, rgba(24, 31, 41, 0), rgba(24, 31, 41, 0.72) 22%, rgba(24, 31, 41, 0.94));
+}
+html[data-theme="dark"] .qx-chat-bubble code,
+html[data-theme="dark"] .qx-ai-explainer-text code {
+  background: rgba(158, 176, 205, 0.2);
+}
+html[data-theme="dark"] .qx-confidence-high {
+  color: #8de0b3;
+  border-color: rgba(110, 214, 158, 0.38);
+  background: rgba(58, 132, 98, 0.24);
+}
+html[data-theme="dark"] .qx-confidence-medium {
+  color: #f2d38a;
+  border-color: rgba(226, 190, 109, 0.36);
+  background: rgba(156, 120, 43, 0.24);
+}
+html[data-theme="dark"] .qx-confidence-low {
+  color: #f0a1ad;
+  border-color: rgba(229, 128, 145, 0.36);
+  background: rgba(140, 61, 75, 0.24);
+}
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] .qx-ai-search {
+    --qx-link-blue: #7fb2ff;
+    --qx-violet-blue: #7682ff;
+    --qx-card-bg: linear-gradient(145deg, rgba(24, 31, 41, 0.96), rgba(20, 26, 36, 0.98));
+    --qx-card-border: rgba(168, 184, 206, 0.18);
+  }
+}
+@media (max-width: 760px) {
+  .qx-search-brand-row {
+    align-items: flex-start;
+  }
+  .qx-search-input-row,
+  .qx-chat-compose-row {
+    grid-template-columns: 1fr;
+  }
+  .qx-search-action {
+    width: 100%;
+  }
+  .qx-stage {
+    min-height: auto;
+  }
+  .qx-chat-shell {
+    position: relative;
+    inset: auto;
+    opacity: 1;
+    transform: none;
+  }
+  .qx-stage.is-chat .qx-browse-shell {
+    display: none;
+  }
+}
+[class*="qx-callout-"] p {
+  text-align: justify;
+  hyphens: auto;
+  text-wrap: pretty;
+}
+
+/* =============================================================================
+   Article media system - local images + Mermaid blocks
+   internal authoring standard, see .grow/hugo-media-guide.md
+   ============================================================================= */
+.qx-prose .article-media {
+  margin: 1.5rem 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.qx-prose .article-media img,
+.qx-prose img.article-media__image,
+.qx-prose .article-media svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--qx-border) 74%, transparent);
+  background: color-mix(in srgb, var(--qx-bg-surface) 88%, transparent);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.05);
+}
+.qx-prose img.article-media__image {
+  margin: 1.5rem 0;
+}
+.qx-prose .article-caption {
+  margin: 0;
+  color: var(--qx-text-muted);
+  font-size: 0.94rem;
+  line-height: 1.6;
+  text-align: center;
+}
+.qx-prose .article-mermaid {
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--qx-border) 74%, transparent);
+  background: color-mix(in srgb, var(--qx-bg-surface) 86%, transparent);
+}
+.qx-prose .article-mermaid__canvas {
+  min-height: 6rem;
+}
+.qx-prose .article-mermaid__canvas svg {
+  margin: 0 auto;
+}
+.qx-prose .article-mermaid__fallback {
+  margin: 0;
+}
+.qx-prose .article-mermaid.is-ready .article-mermaid__fallback {
+  display: none;
+}
+.qx-prose .article-mermaid.is-error .article-mermaid__canvas {
+  display: none;
+}
