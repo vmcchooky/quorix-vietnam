@@ -102,3 +102,7 @@
   showNav();
 })();
 </script>
+{{- if .IsPage }}
+{{- $articleMedia := resources.Get "js/article-media.js" | minify | fingerprint -}}
+<script type="module" src="{{ $articleMedia.Permalink }}" integrity="{{ $articleMedia.Data.Integrity }}" crossorigin="anonymous"></script>
+{{- end }}

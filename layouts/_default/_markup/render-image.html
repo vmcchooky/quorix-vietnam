@@ -1,0 +1,55 @@
+{{- $src := .Destination | default "" -}}
+{{- $lookup := $src | strings.TrimPrefix "./" | strings.TrimPrefix "/" -}}
+{{- $url := $src | relURL -}}
+{{- $width := "" -}}
+{{- $height := "" -}}
+{{- $lowerSrc := lower $src -}}
+{{- $isRemote := or (or (strings.HasPrefix $lowerSrc "http://") (strings.HasPrefix $lowerSrc "https://")) (or (strings.HasPrefix $lowerSrc "//") (strings.HasPrefix $lowerSrc "data:")) -}}
+{{- if $isRemote -}}
+  {{- $url = $src -}}
+{{- else if and .Page $lookup -}}
+  {{- $resource := .Page.Resources.GetMatch $lookup -}}
+  {{- if not $resource -}}
+    {{- range $candidate := slice (printf "**/%s" $lookup) (printf "*%s" $lookup) -}}
+      {{- if not $resource -}}
+        {{- $resource = $.Page.Resources.GetMatch $candidate -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- with $resource -}}
+    {{- $url = .RelPermalink -}}
+    {{- with .Width -}}
+      {{- $width = . -}}
+    {{- end -}}
+    {{- with .Height -}}
+      {{- $height = . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $alt := .Text | default "" -}}
+{{- if .Title }}
+<figure class="article-media">
+  <img
+    class="article-media__image"
+    src="{{ $url }}"
+    alt="{{ $alt }}"
+    loading="lazy"
+    decoding="async"
+    {{- with $width }} width="{{ . }}"{{ end -}}
+    {{- with $height }} height="{{ . }}"{{ end -}}
+  >
+  {{- with .Title }}
+  <figcaption class="article-caption">{{ . | markdownify }}</figcaption>
+  {{- end }}
+</figure>
+{{- else }}
+<img
+  class="article-media__image"
+  src="{{ $url }}"
+  alt="{{ $alt }}"
+  loading="lazy"
+  decoding="async"
+  {{- with $width }} width="{{ . }}"{{ end -}}
+  {{- with $height }} height="{{ . }}"{{ end -}}
+>
+{{- end }}

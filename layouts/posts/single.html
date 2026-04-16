@@ -37,9 +37,44 @@
       {{- partial "post_meta.html" . }}
     </div>
 
-    {{- with .Params.cover.image }}
+    {{- if and .Params.cover.image (ne .Params.cover.hiddenInSingle true) }}
+    {{- $coverSrc := .Params.cover.image -}}
+    {{- $coverLookup := $coverSrc | strings.TrimPrefix "./" | strings.TrimPrefix "/" -}}
+    {{- $coverURL := $coverSrc | relURL -}}
+    {{- $coverWidth := "" -}}
+    {{- $coverHeight := "" -}}
+    {{- $coverLower := lower $coverSrc -}}
+    {{- $coverRemote := or (or (strings.HasPrefix $coverLower "http://") (strings.HasPrefix $coverLower "https://")) (or (strings.HasPrefix $coverLower "//") (strings.HasPrefix $coverLower "data:")) -}}
+    {{- if $coverRemote -}}
+      {{- $coverURL = $coverSrc -}}
+    {{- else if $coverLookup -}}
+      {{- $coverResource := .Resources.GetMatch $coverLookup -}}
+      {{- if not $coverResource -}}
+        {{- range $candidate := slice (printf "**/%s" $coverLookup) (printf "*%s" $coverLookup) -}}
+          {{- if not $coverResource -}}
+            {{- $coverResource = $.Resources.GetMatch $candidate -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+      {{- with $coverResource -}}
+        {{- $coverURL = .RelPermalink -}}
+        {{- with .Width -}}
+          {{- $coverWidth = . -}}
+        {{- end -}}
+        {{- with .Height -}}
+          {{- $coverHeight = . -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
     <figure class="qx-d-grid qx-gap-2">
-      <img src="{{ . | relURL }}" alt="{{ $.Params.cover.alt | default $.Title }}" loading="eager">
+      <img
+        src="{{ $coverURL }}"
+        alt="{{ $.Params.cover.alt | default $.Title }}"
+        loading="eager"
+        decoding="async"
+        {{- with $coverWidth }} width="{{ . }}"{{ end -}}
+        {{- with $coverHeight }} height="{{ . }}"{{ end -}}
+      >
       {{- with $.Params.cover.caption }}
       <figcaption class="qx-text-muted">{{ . }}</figcaption>
       {{- end }}
